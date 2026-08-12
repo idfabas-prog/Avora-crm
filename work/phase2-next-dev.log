@@ -1,0 +1,11 @@
+
+> next-js-currently-recommends-create-next@0.1.0 dev
+> next dev --turbopack
+
+▲ Next.js 16.3.0 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.0.36:3001
+- Environments: .env.local
+✓ Ready in 1057ms
+✓ Running next.config.ts took 53ms
+[?25h

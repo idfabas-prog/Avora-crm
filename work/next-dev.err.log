@@ -1,0 +1,684 @@
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36masync[0m [36mfunction[0m middleware(request: [33mNextRequest[0m) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/layout.tsx:2:1
+Error: Module not found: Can't resolve './globals.css'
+  [90m1 |[0m [36mimport[0m [36mtype[0m { [33mMetadata[0m } [36mfrom[0m [32m"next"[0m;
+[31m[1m>[0m [90m2 |[0m [36mimport[0m [32m"./globals.css"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m
+  [90m4 |[0m [36mexport[0m [36mconst[0m metadata: [33mMetadata[0m = {
+  [90m5 |[0m   title: [32m"Avora CRM"[0m,
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mtype[0m [33mCookieToSet[0m = {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./middleware.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mtype[0m [33mCookieToSet[0m = {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./proxy.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mtype[0m [33mCookieToSet[0m = {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./proxy.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mtype[0m [33mCookieToSet[0m = {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./proxy.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mtype[0m [33mCookieToSet[0m = {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./proxy.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+[31m[1m>[0m [90m1 |[0m [36mimport[0m { createServerClient } [36mfrom[0m [32m"@supabase/ssr"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m [36mimport[0m { [33mNextResponse[0m, [36mtype[0m [33mNextRequest[0m } [36mfrom[0m [32m"next/server"[0m;
+  [90m3 |[0m
+  [90m4 |[0m [36mtype[0m [33mCookieToSet[0m = {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ Error: Cannot find module '@supabase/ssr'
+    at <unknown> (.next\dev\server\edge\chunks\[root-of-the-server]__1zbig41._.js:24:15)
+    at module evaluation (.next\dev\server\edge\chunks\[root-of-the-server]__1zbig41._.js:27:3)
+[browser] Uncaught Error: ./proxy.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+> 1 | import { createServerClient } from "@supabase/ssr";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { NextResponse, type NextRequest } from "next/server";
+  3 |
+  4 | type CookieToSet = {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./proxy.ts:1:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (Error: (./proxy.ts:1:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+[browser] ./proxy.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+> 1 | import { createServerClient } from "@supabase/ssr";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { NextResponse, type NextRequest } from "next/server";
+  3 |
+  4 | type CookieToSet = {
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] ./proxy.ts:1:1
+Error: Module not found: Can't resolve '@supabase/ssr'
+> 1 | import { createServerClient } from "@supabase/ssr";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { NextResponse, type NextRequest } from "next/server";
+  3 |
+  4 | type CookieToSet = {
+
+https://nextjs.org/docs/messages/module-not-found 
+⨯ Error: Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    at getSupabaseBrowserConfig (lib\supabase\env.ts:6:11)
+    at createClient (lib\supabase\server.ts:13:59)
+    at async getCurrentProfile (lib\auth\profile.ts:41:20)
+    at async LoginPage (app\login\page.tsx:6:19)
+  4 |
+  5 |   if (!url || !publishableKey) {
+> 6 |     throw new Error(
+    |           ^
+  7 |       "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+  8 |     );
+  9 |   } {
+  digest: '2546034594'
+}
+[browser] Uncaught Error: Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    at getSupabaseBrowserConfig (lib\supabase\env.ts:6:11)
+    at createClient (lib\supabase\server.ts:13:59)
+    at  getCurrentProfile (lib\auth\profile.ts:41:20)
+    at  LoginPage (app\login\page.tsx:6:19)
+  4 |
+  5 |   if (!url || !publishableKey) {
+> 6 |     throw new Error(
+    |           ^
+  7 |       "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+  8 |     );
+  9 |   }
+⨯ Error: Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    at getSupabaseBrowserConfig (lib\supabase\env.ts:6:11)
+    at createClient (lib\supabase\server.ts:13:59)
+    at async getCurrentProfile (lib\auth\profile.ts:41:20)
+    at async LoginPage (app\login\page.tsx:6:19)
+  4 |
+  5 |   if (!url || !publishableKey) {
+> 6 |     throw new Error(
+    |           ^
+  7 |       "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+  8 |     );
+  9 |   } {
+  digest: '2546034594'
+}
+[browser] Uncaught Error: Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    at getSupabaseBrowserConfig (lib\supabase\env.ts:6:11)
+    at createClient (lib\supabase\server.ts:13:59)
+    at  getCurrentProfile (lib\auth\profile.ts:41:20)
+    at  LoginPage (app\login\page.tsx:6:19)
+  4 |
+  5 |   if (!url || !publishableKey) {
+> 6 |     throw new Error(
+    |           ^
+  7 |       "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+  8 |     );
+  9 |   }
+⨯ Error: Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    at getSupabaseBrowserConfig (lib\supabase\env.ts:6:11)
+    at createClient (lib\supabase\server.ts:13:59)
+    at async getCurrentProfile (lib\auth\profile.ts:41:20)
+    at async LoginPage (app\login\page.tsx:6:19)
+  4 |
+  5 |   if (!url || !publishableKey) {
+> 6 |     throw new Error(
+    |           ^
+  7 |       "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+  8 |     );
+  9 |   } {
+  digest: '2546034594'
+}
+[browser] Uncaught Error: Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    at getSupabaseBrowserConfig (lib\supabase\env.ts:6:11)
+    at createClient (lib\supabase\server.ts:13:59)
+    at  getCurrentProfile (lib\auth\profile.ts:41:20)
+    at  LoginPage (app\login\page.tsx:6:19)
+  4 |
+  5 |   if (!url || !publishableKey) {
+> 6 |     throw new Error(
+    |           ^
+  7 |       "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+  8 |     );
+  9 |   }
+⨯ Error: Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    at getSupabaseBrowserConfig (lib\supabase\env.ts:6:11)
+    at createClient (lib\supabase\server.ts:13:59)
+    at async getCurrentProfile (lib\auth\profile.ts:41:20)
+    at async LoginPage (app\login\page.tsx:6:19)
+  4 |
+  5 |   if (!url || !publishableKey) {
+> 6 |     throw new Error(
+    |           ^
+  7 |       "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+  8 |     );
+  9 |   } {
+  digest: '2546034594'
+}
+[browser] Uncaught Error: Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    at getSupabaseBrowserConfig (lib\supabase\env.ts:6:11)
+    at createClient (lib\supabase\server.ts:13:59)
+    at  getCurrentProfile (lib\auth\profile.ts:41:20)
+    at  LoginPage (app\login\page.tsx:6:19)
+  4 |
+  5 |   if (!url || !publishableKey) {
+> 6 |     throw new Error(
+    |           ^
+  7 |       "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+  8 |     );
+  9 |   }
+⨯ Error: Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    at getSupabaseBrowserConfig (lib\supabase\env.ts:6:11)
+    at createClient (lib\supabase\server.ts:13:59)
+    at async getCurrentProfile (lib\auth\profile.ts:41:20)
+    at async LoginPage (app\login\page.tsx:6:19)
+  4 |
+  5 |   if (!url || !publishableKey) {
+> 6 |     throw new Error(
+    |           ^
+  7 |       "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+  8 |     );
+  9 |   } {
+  digest: '2546034594'
+}
+[browser] Uncaught Error: Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    at getSupabaseBrowserConfig (lib\supabase\env.ts:6:11)
+    at createClient (lib\supabase\server.ts:13:59)
+    at  getCurrentProfile (lib\auth\profile.ts:41:20)
+    at  LoginPage (app\login\page.tsx:6:19)
+  4 |
+  5 |   if (!url || !publishableKey) {
+> 6 |     throw new Error(
+    |           ^
+  7 |       "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+  8 |     );
+  9 |   }
+⨯ Error: Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL.
+    at proxy (proxy.ts:22:38)
+  20 |   }
+  21 |
+> 22 |   const supabase = createServerClient(supabaseUrl, supabaseKey, {
+     |                                      ^
+  23 |     cookies: {
+  24 |       getAll() {
+  25 |         return request.cookies.getAll();
+[browser] Uncaught Error: Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL.
+    at proxy (proxy.ts:22:38)
+  20 |   }
+  21 |
+> 22 |   const supabase = createServerClient(supabaseUrl, supabaseKey, {
+     |                                      ^
+  23 |     cookies: {
+  24 |       getAll() {
+  25 |         return request.cookies.getAll();
+⨯ Error: Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL.
+    at proxy (proxy.ts:22:38)
+  20 |   }
+  21 |
+> 22 |   const supabase = createServerClient(supabaseUrl, supabaseKey, {
+     |                                      ^
+  23 |     cookies: {
+  24 |       getAll() {
+  25 |         return request.cookies.getAll();
+[browser] Uncaught Error: Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL.
+    at proxy (proxy.ts:22:38)
+  20 |   }
+  21 |
+> 22 |   const supabase = createServerClient(supabaseUrl, supabaseKey, {
+     |                                      ^
+  23 |     cookies: {
+  24 |       getAll() {
+  25 |         return request.cookies.getAll();
+⨯ Error: Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL.
+    at proxy (proxy.ts:22:38)
+  20 |   }
+  21 |
+> 22 |   const supabase = createServerClient(supabaseUrl, supabaseKey, {
+     |                                      ^
+  23 |     cookies: {
+  24 |       getAll() {
+  25 |         return request.cookies.getAll();
+[browser] Uncaught Error: Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL.
+    at proxy (proxy.ts:22:38)
+  20 |   }
+  21 |
+> 22 |   const supabase = createServerClient(supabaseUrl, supabaseKey, {
+     |                                      ^
+  23 |     cookies: {
+  24 |       getAll() {
+  25 |         return request.cookies.getAll();

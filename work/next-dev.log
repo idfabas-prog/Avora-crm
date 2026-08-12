@@ -1,0 +1,34 @@
+
+> next-js-currently-recommends-create-next@0.1.0 dev
+> next dev --turbopack
+
+▲ Next.js 16.3.0 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.36:3000
+✓ Ready in 693ms
+✓ Running next.config.ts took 33ms
+
+✓ Generated AGENTS.md and CLAUDE.md for AI agents. Set `agentRules: false` in next.config to disable.
+ GET / 200 in 1594ms (next.js: 1498ms, application-code: 96ms)
+ GET / 200 in 46ms (next.js: 10ms, application-code: 35ms)
+✓ Compiled in 13ms
+✓ Compiled in 27ms
+✓ Compiled in 22ms
+✓ Compiled in 5ms
+ GET /login 404 in 143ms (next.js: -16.9ms, proxy.ts: 128ms, application-code: 31ms)
+✓ Compiled in 811ms
+ GET /login 500 in 1428ms (next.js: 1118ms, proxy.ts: 109ms, application-code: 200ms)
+ GET /login 500 in 108ms (next.js: 14ms, proxy.ts: 8ms, application-code: 86ms)
+ GET /login 500 in 79ms (next.js: 7ms, proxy.ts: 6ms, application-code: 66ms)
+  Reload env: .env.local
+ GET /login 500 in 419ms (next.js: 145ms, proxy.ts: 108ms, application-code: 166ms)
+ GET /login 500 in 95ms (next.js: 7ms, proxy.ts: 8ms, application-code: 79ms)
+  Reload env: .env.local
+✓ Compiled in 88ms
+ GET /login 404 in 372ms (next.js: -41.5ms, proxy.ts: 361ms, application-code: 53ms)
+ GET /login 404 in 50ms (next.js: -18.6ms, proxy.ts: 41ms, application-code: 28ms)
+ GET /login 404 in 85ms (next.js: -24.3ms, proxy.ts: 82ms, application-code: 27ms)
+  Reload env: .env.local
+✓ Compiled in 2ms
+ GET /login 200 in 426ms (next.js: 169ms, proxy.ts: 3ms, application-code: 254ms)
+[?25h
