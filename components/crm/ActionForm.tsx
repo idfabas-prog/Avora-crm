@@ -9,7 +9,7 @@ export function ActionForm({
   successMessage,
   className = "record-form"
 }: {
-  action: (formData: FormData) => Promise<void>;
+  action: (formData: FormData) => Promise<unknown>;
   children: React.ReactNode;
   submitLabel: string;
   successMessage: string;

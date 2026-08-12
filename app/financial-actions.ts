@@ -6,6 +6,7 @@ import { requireCurrentProfile } from "@/lib/auth/profile";
 import { dollarsToCents } from "@/lib/financial/money";
 import { assertPositiveAmount } from "@/lib/financial/validation";
 import { assertFinancialPermission } from "@/lib/financial/permissions";
+import { emitDomainEvent } from "@/lib/workflows/server-events";
 
 function required(value: FormDataEntryValue | null, label: string) {
   const text = String(value ?? "").trim();
@@ -102,6 +103,16 @@ export async function createSale(formData: FormData) {
   }
 
   await audit("Sale Created", "sales", sale.id, { location_id: locationId });
+  await emitDomainEvent({
+    organizationId: profile.organizationId,
+    eventType: "sale.created",
+    entityType: "sale",
+    entityId: sale.id,
+    locationId,
+    contactId: required(formData.get("contact_id"), "Contact"),
+    saleId: sale.id,
+    payload: { sale: { id: sale.id, location_id: locationId, total_amount_cents: unitPriceCents * quantity - discountAmountCents } }
+  });
   revalidatePath("/sales");
   revalidatePath("/dashboard");
   revalidatePath(`/contacts/${required(formData.get("contact_id"), "Contact")}`);
@@ -161,6 +172,16 @@ export async function addPayment(formData: FormData) {
   }
 
   await audit("Payment Recorded", "payments", data.id, { sale_id: sale.id, simulated });
+  await emitDomainEvent({
+    organizationId: profile.organizationId,
+    eventType: optional(formData.get("status")) === "failed" ? "payment.failed" : "payment.succeeded",
+    entityType: "payment",
+    entityId: data.id,
+    locationId: sale.location_id,
+    contactId: sale.contact_id,
+    saleId: sale.id,
+    payload: { payment: { id: data.id, amount_cents: amountCents, status: optional(formData.get("status")) ?? "succeeded" }, sale: { id: sale.id } }
+  });
   revalidatePath("/payments");
   revalidatePath("/sales");
   revalidatePath("/dashboard");
@@ -219,6 +240,16 @@ export async function createRefund(formData: FormData) {
   }
 
   await audit("Refund Created", "refunds", data.id, { payment_id: payment.id, sale_id: payment.sale_id });
+  await emitDomainEvent({
+    organizationId: profile.organizationId,
+    eventType: "refund.completed",
+    entityType: "refund",
+    entityId: data.id,
+    locationId: payment.location_id,
+    contactId: payment.contact_id,
+    saleId: payment.sale_id,
+    payload: { refund: { id: data.id, amount_cents: amountCents, status: optional(formData.get("status")) ?? "succeeded" } }
+  });
   revalidatePath("/payments");
   revalidatePath("/sales");
   revalidatePath("/dashboard");

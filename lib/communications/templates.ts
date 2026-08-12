@@ -1,10 +1,13 @@
 const supportedVariables = [
   "first_name",
+  "last_name",
   "location_name",
   "appointment_date",
   "appointment_time",
+  "appointment_type",
   "provider_name",
-  "appointment_type"
+  "salesperson_name",
+  "balance_due"
 ] as const;
 
 type TemplateValues = Partial<Record<(typeof supportedVariables)[number], string>>;

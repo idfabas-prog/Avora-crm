@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireCurrentProfile } from "@/lib/auth/profile";
 import { locationCookieName } from "@/lib/crm/location";
 import { toDbStatus } from "@/lib/crm/constants";
+import { emitDomainEvent } from "@/lib/workflows/server-events";
 
 function required(value: FormDataEntryValue | null, label: string) {
   const text = String(value ?? "").trim();
@@ -118,6 +119,15 @@ export async function createContact(formData: FormData) {
   }
 
   await writeAudit("Contact Created", "contacts", data.id, { location_id: locationId });
+  await emitDomainEvent({
+    organizationId: profile.organizationId,
+    eventType: "contact.created",
+    entityType: "contact",
+    entityId: data.id,
+    locationId,
+    contactId: data.id,
+    payload: { contact: { id: data.id, location_id: locationId, status: toDbStatus(required(formData.get("status"), "Status")), lead_source: optional(formData.get("lead_source")) } }
+  });
   revalidatePath("/contacts");
   revalidatePath("/dashboard");
 }
@@ -128,6 +138,7 @@ export async function updateContact(formData: FormData) {
   const contactId = required(formData.get("contact_id"), "Contact");
   const locationId = ensureAllowedLocation(optional(formData.get("location_id")), profile.locations.map((item) => item.id));
 
+  const newStatus = toDbStatus(required(formData.get("status"), "Status"));
   const { error } = await supabase
     .from("contacts")
     .update({
@@ -138,7 +149,7 @@ export async function updateContact(formData: FormData) {
       phone: optional(formData.get("phone")),
       email: optional(formData.get("email")),
       lead_source: optional(formData.get("lead_source")),
-      status: toDbStatus(required(formData.get("status"), "Status")),
+      status: newStatus,
       last_activity_at: new Date().toISOString()
     })
     .eq("id", contactId)
@@ -149,6 +160,24 @@ export async function updateContact(formData: FormData) {
   }
 
   await writeAudit("Contact Updated", "contacts", contactId);
+  await emitDomainEvent({
+    organizationId: profile.organizationId,
+    eventType: "contact.updated",
+    entityType: "contact",
+    entityId: contactId,
+    locationId,
+    contactId,
+    payload: { contact: { id: contactId, location_id: locationId, status: newStatus } }
+  });
+  await emitDomainEvent({
+    organizationId: profile.organizationId,
+    eventType: "contact.status_changed",
+    entityType: "contact",
+    entityId: contactId,
+    locationId,
+    contactId,
+    payload: { contact: { id: contactId, status: newStatus } }
+  });
   revalidatePath("/contacts");
   revalidatePath(`/contacts/${contactId}`);
 }
@@ -210,6 +239,16 @@ export async function createOpportunity(formData: FormData) {
   }
 
   await writeAudit("Opportunity Created", "opportunities", data.id, { location_id: locationId });
+  await emitDomainEvent({
+    organizationId: profile.organizationId,
+    eventType: "opportunity.created",
+    entityType: "opportunity",
+    entityId: data.id,
+    locationId,
+    contactId: required(formData.get("contact_id"), "Contact"),
+    opportunityId: data.id,
+    payload: { opportunity: { id: data.id, location_id: locationId, stage_id: required(formData.get("stage_id"), "Stage") } }
+  });
   revalidatePath("/opportunities");
   revalidatePath("/dashboard");
 }
@@ -234,6 +273,14 @@ export async function moveOpportunityStage(formData: FormData) {
   }
 
   await writeAudit("Opportunity Stage Changed", "opportunities", opportunityId, { stage_id: stageId });
+  await emitDomainEvent({
+    organizationId: profile.organizationId,
+    eventType: "opportunity.stage_changed",
+    entityType: "opportunity",
+    entityId: opportunityId,
+    opportunityId,
+    payload: { opportunity: { id: opportunityId, stage_id: stageId } }
+  });
   revalidatePath("/opportunities");
   revalidatePath("/dashboard");
 }
@@ -291,6 +338,16 @@ export async function createAppointment(formData: FormData) {
   }
 
   await writeAudit("Appointment Created", "appointments", data.id, { location_id: locationId });
+  await emitDomainEvent({
+    organizationId: profile.organizationId,
+    eventType: "appointment.created",
+    entityType: "appointment",
+    entityId: data.id,
+    locationId,
+    contactId: required(formData.get("contact_id"), "Contact"),
+    appointmentId: data.id,
+    payload: { appointment: { id: data.id, location_id: locationId, status: toDbStatus(required(formData.get("status"), "Status")), start_at: start.toISOString() } }
+  });
   revalidatePath("/calendar");
 }
 
@@ -311,6 +368,14 @@ export async function updateAppointmentStatus(formData: FormData) {
   }
 
   await writeAudit(status === "Cancelled" ? "Appointment Cancelled" : "Appointment Updated", "appointments", appointmentId, { status });
+  await emitDomainEvent({
+    organizationId: profile.organizationId,
+    eventType: status === "No Show" ? "appointment.no_show" : status === "Cancelled" ? "appointment.cancelled" : status === "Completed" ? "appointment.completed" : status === "Checked In" ? "appointment.checked_in" : status === "Confirmed" ? "appointment.confirmed" : "appointment.rescheduled",
+    entityType: "appointment",
+    entityId: appointmentId,
+    appointmentId,
+    payload: { appointment: { id: appointmentId, status: toDbStatus(status) } }
+  });
   revalidatePath("/calendar");
 }
 
@@ -339,6 +404,16 @@ export async function createTask(formData: FormData) {
   }
 
   await writeAudit("Task Created", "tasks", data.id, { location_id: locationId });
+  await emitDomainEvent({
+    organizationId: profile.organizationId,
+    eventType: "task.created",
+    entityType: "task",
+    entityId: data.id,
+    locationId,
+    contactId: optional(formData.get("contact_id")),
+    opportunityId: optional(formData.get("opportunity_id")),
+    payload: { task: { id: data.id, title: required(formData.get("title"), "Task title") } }
+  });
   revalidatePath("/dashboard");
   revalidatePath("/contacts");
 }
@@ -360,6 +435,15 @@ export async function updateTaskStatus(formData: FormData) {
   }
 
   await writeAudit(status === "Completed" ? "Task Completed" : "Task Updated", "tasks", taskId, { status });
+  if (status === "Completed") {
+    await emitDomainEvent({
+      organizationId: profile.organizationId,
+      eventType: "task.completed",
+      entityType: "task",
+      entityId: taskId,
+      payload: { task: { id: taskId, status: toDbStatus(status) } }
+    });
+  }
   revalidatePath("/dashboard");
   revalidatePath("/contacts");
 }

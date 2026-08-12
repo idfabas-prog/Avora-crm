@@ -767,6 +767,66 @@ a {
   margin: 0 0 14px;
 }
 
+.workflow-flow {
+  display: grid;
+  gap: 14px;
+}
+
+.workflow-node {
+  background: #fbf8f3;
+  border: 1px solid var(--line);
+  border-left: 5px solid #8d6f54;
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.workflow-node.trigger {
+  border-left-color: #60765b;
+}
+
+.workflow-node.condition,
+.workflow-node.branch {
+  border-left-color: #9a7446;
+}
+
+.workflow-node.wait {
+  border-left-color: #6c7d90;
+}
+
+.workflow-node.stop {
+  border-left-color: #9b4f43;
+}
+
+.workflow-node > div:first-child {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.workflow-node > div:first-child span {
+  align-items: center;
+  background: #2f2924;
+  border-radius: 999px;
+  color: #fffaf4;
+  display: inline-flex;
+  font-size: 12px;
+  height: 24px;
+  justify-content: center;
+  width: 24px;
+}
+
+.workflow-node p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.nested-panel {
+  box-shadow: none;
+  margin-top: 14px;
+}
+
 .settings-card {
   background: #fbf8f3;
   border: 1px solid var(--line);

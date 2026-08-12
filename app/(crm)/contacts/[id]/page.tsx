@@ -3,6 +3,7 @@ import { AddAppointmentForm, AppointmentStatusActions } from "@/components/crm/A
 import { EditContactForm } from "@/components/crm/ContactForms";
 import { NoteForm } from "@/components/crm/NoteForm";
 import { AddTaskForm, TaskStatusForm } from "@/components/crm/TaskForms";
+import { ManualEnrollmentForm, StopEnrollmentForm } from "@/components/crm/WorkflowForms";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
@@ -11,8 +12,10 @@ import { formatCurrency, formatDate, formatDateTime, formatTime, fromDbStatus } 
 import { formatPhoneNumber } from "@/lib/communications/phone";
 import { formatMoney } from "@/lib/financial/money";
 import { getFinancialSummary } from "@/lib/financial/queries";
+import { hasWorkflowPermission } from "@/lib/workflows/permissions";
+import { statusLabels } from "@/lib/workflows/constants";
 
-const tabs = ["Timeline", "Messages", "Appointments", "Opportunities", "Notes", "Tasks", "Sales", "Treatments", "Files"];
+const tabs = ["Timeline", "Messages", "Appointments", "Opportunities", "Notes", "Tasks", "Sales", "Workflows", "Treatments", "Files"];
 
 export default async function ContactProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -50,6 +53,8 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
     { data: sales },
     { data: payments },
     { data: refunds },
+    { data: workflows },
+    { data: workflowEnrollments },
     financialSummary
   ] = await Promise.all([
     supabase.from("user_profiles").select("id, full_name").eq("organization_id", profile.organizationId).order("full_name"),
@@ -67,6 +72,8 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
     supabase.from("sales").select("id, sale_date, status, total_amount_cents, paid_amount_cents, balance_due_cents, currency, sale_items(description)").eq("contact_id", id).order("sale_date", { ascending: false }),
     supabase.from("payments").select("id, amount_cents, currency, payment_method, payment_provider, status, received_at, simulated").eq("contact_id", id).order("received_at", { ascending: false }),
     supabase.from("refunds").select("id, amount_cents, status, reason, refunded_at").eq("contact_id", id).order("refunded_at", { ascending: false }),
+    supabase.from("workflows").select("id, name").eq("organization_id", profile.organizationId).eq("status", "active").order("name"),
+    supabase.from("workflow_enrollments").select("id, status, current_node_id, enrolled_at, completed_at, stopped_at, stop_reason, workflows(name)").eq("contact_id", id).eq("organization_id", profile.organizationId).order("created_at", { ascending: false }).limit(25),
     getFinancialSummary(supabase, { organizationId: profile.organizationId, locationIds: profile.locations.map((item) => item.id), contactId: id })
   ]);
 
@@ -77,6 +84,7 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
   const contactOptions = (allContacts ?? []).map((item) => ({ id: item.id, name: `${item.first_name} ${item.last_name}` }));
   const opportunityOptions = (allOpportunities ?? []).map((item) => ({ id: item.id, name: item.name }));
   const appointmentTypeOptions = (appointmentTypes ?? []).map((item) => ({ id: item.id, name: item.name, duration_minutes: item.duration_minutes }));
+  const workflowOptions = (workflows ?? []).map((workflow) => ({ id: workflow.id, name: workflow.name }));
 
   return (
     <div className="page-stack">
@@ -183,6 +191,34 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
               {(tasks ?? []).map((task) => {
                 const owner = Array.isArray(task.user_profiles) ? task.user_profiles[0] : task.user_profiles;
                 return <article key={task.id}><strong>{task.title}</strong><p>{owner?.full_name ?? "Unassigned"} · Due {formatDateTime(task.due_at)}</p><TaskStatusForm currentStatus={fromDbStatus(task.status)} taskId={task.id} /></article>;
+              })}
+            </div>
+          </section>
+          <section>
+            <h2>Workflows</h2>
+            {hasWorkflowPermission(profile, "workflows.enroll") ? (
+              <div className="record-list">
+                {workflowOptions.map((workflow) => (
+                  <details key={workflow.id}>
+                    <summary className="summary-action">Enroll in {workflow.name}</summary>
+                    <ManualEnrollmentForm contacts={[{ id: contact.id, name: `${contact.first_name} ${contact.last_name}` }]} workflowId={workflow.id} />
+                  </details>
+                ))}
+              </div>
+            ) : null}
+            <div className="record-list">
+              {(workflowEnrollments ?? []).map((enrollment) => {
+                const workflow = Array.isArray(enrollment.workflows) ? enrollment.workflows[0] : enrollment.workflows;
+                return (
+                  <article key={enrollment.id}>
+                    <strong>{workflow?.name ?? "Workflow"}</strong>
+                    <p>{statusLabels[String(enrollment.status)] ?? enrollment.status} Â· current step {enrollment.current_node_id ?? "not started"}</p>
+                    <span>Enrolled {formatDateTime(enrollment.enrolled_at)}</span>
+                    {["active", "waiting", "failed"].includes(String(enrollment.status)) && hasWorkflowPermission(profile, "workflows.stop") ? (
+                      <details><summary className="summary-action">Stop Enrollment</summary><StopEnrollmentForm enrollmentId={enrollment.id} /></details>
+                    ) : null}
+                  </article>
+                );
               })}
             </div>
           </section>
