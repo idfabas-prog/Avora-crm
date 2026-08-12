@@ -183,6 +183,7 @@ a {
 }
 
 .top-header-actions,
+.header-actions,
 .toolbar,
 .filter-bar {
   align-items: center;
@@ -195,7 +196,8 @@ a {
 }
 
 .icon-button,
-.primary-button {
+.primary-button,
+.secondary-button {
   border: 1px solid var(--line);
   border-radius: 8px;
   cursor: pointer;
@@ -211,6 +213,14 @@ a {
   background: #2f2924;
   color: #fffaf4;
   padding: 0 16px;
+}
+
+.secondary-button {
+  align-items: center;
+  background: var(--panel);
+  color: #3b3028;
+  display: inline-flex;
+  padding: 0 14px;
 }
 
 .content-shell {
@@ -450,6 +460,21 @@ a {
 .record-form label {
   display: grid;
   gap: 7px;
+}
+
+.record-form button {
+  justify-self: start;
+}
+
+.checkbox-row {
+  align-items: start;
+  display: flex !important;
+  gap: 8px !important;
+}
+
+.checkbox-grid {
+  display: grid;
+  gap: 10px;
 }
 
 .record-form label span {
@@ -719,6 +744,27 @@ a {
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.settings-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.settings-nav a {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: #3b3028;
+  min-height: 38px;
+  padding: 10px 12px;
+}
+
+.settings-list {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 14px;
 }
 
 .settings-card {

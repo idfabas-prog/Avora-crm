@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { requireCurrentProfile } from "@/lib/auth/profile";
@@ -20,9 +21,18 @@ export default async function SettingsPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        description="Communication configuration by location. Secrets are never displayed here."
+        description="Communication and financial controls by location. Secrets are never displayed here."
         title="Settings"
       />
+      <section className="settings-nav">
+        <Link href="/settings/services">Services</Link>
+        <Link href="/settings/packages">Packages</Link>
+        <Link href="/settings/payments">Payment Rules</Link>
+        <Link href="/settings/commissions">Commission Rules</Link>
+        <Link href="/settings/royalties">Royalty Rules</Link>
+        <Link href="/settings/financial-health">Financial Health</Link>
+        <Link href="/settings/audit-log">Audit Log</Link>
+      </section>
       <section className="panel">
         <div className="panel-header"><h2>Communications</h2><span>Configured / Not Configured</span></div>
         <div className="settings-grid">

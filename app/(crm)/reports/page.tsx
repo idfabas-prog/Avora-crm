@@ -87,7 +87,13 @@ export default async function ReportsPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        action={<Link className="primary-button" href="/sales/commissions">Commission Report</Link>}
+        action={
+          <div className="header-actions">
+            <Link className="secondary-button" href="/api/exports/financial?type=sales">Export Sales</Link>
+            <Link className="secondary-button" href="/api/exports/financial?type=payments">Export Payments</Link>
+            <Link className="primary-button" href="/sales/commissions">Commission Report</Link>
+          </div>
+        }
         description="Operational financial reporting. This is not a formal accounting ledger."
         title="Reports"
       />
