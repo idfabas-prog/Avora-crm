@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AddTaskForm, TaskStatusForm } from "@/components/crm/TaskForms";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
@@ -8,6 +9,8 @@ import { allowedLocationIds, getSelectedLocationId } from "@/lib/crm/location";
 import { formatDateTime, fromDbStatus } from "@/lib/crm/constants";
 import { formatMoney } from "@/lib/financial/money";
 import { getFinancialSummary } from "@/lib/financial/queries";
+import { buildOwnerBrief } from "@/lib/ai/owner-brief";
+import { RefreshInsightsButton } from "@/components/crm/AiForms";
 
 async function countQuery(query: PromiseLike<{ count: number | null; error: { message: string } | null }>) {
   const result = await query;
@@ -42,7 +45,9 @@ export default async function DashboardPage() {
     contactsResult,
     opportunitiesResult,
     tasksResult,
-    financialSummary
+    financialSummary,
+    ownerBrief,
+    insightsResult
   ] = await Promise.all([
     countQuery(withLocation(supabase.from("contacts").select("*", { count: "exact", head: true }).eq("organization_id", profile.organizationId).eq("status", "new_lead").gte("created_at", monthStart))),
     countQuery(withLocation(supabase.from("opportunities").select("*", { count: "exact", head: true }).eq("organization_id", profile.organizationId))),
@@ -55,7 +60,9 @@ export default async function DashboardPage() {
     supabase.from("contacts").select("id, first_name, last_name").eq("organization_id", profile.organizationId).order("last_name"),
     supabase.from("opportunities").select("id, name").eq("organization_id", profile.organizationId).order("name"),
     withLocation(supabase.from("tasks").select("id, title, status, due_at, user_profiles(full_name)").eq("organization_id", profile.organizationId).in("status", ["open", "in_progress"]).order("due_at", { ascending: true }).limit(8)),
-    getFinancialSummary(supabase, { organizationId: profile.organizationId, locationIds })
+    getFinancialSummary(supabase, { organizationId: profile.organizationId, locationIds }),
+    buildOwnerBrief(supabase, profile, locationIds),
+    supabase.from("ai_insights").select("id, severity, title, summary").eq("organization_id", profile.organizationId).eq("status", "active").order("generated_at", { ascending: false }).limit(4)
   ]);
 
   const liveMetrics = [
@@ -82,6 +89,27 @@ export default async function DashboardPage() {
       />
       <section className="metric-grid">
         {liveMetrics.map((metric) => <StatCard key={metric.label} {...metric} />)}
+      </section>
+      <section className="panel executive-brief">
+        <div className="panel-header"><h2>Daily AI Brief</h2><RefreshInsightsButton /></div>
+        <div className="brief-grid">
+          {["Today", "Month to Date", "Needs Attention", "Suggested Priorities"].map((label, index) => (
+            <article key={label}>
+              <span>{label}</span>
+              <strong>{ownerBrief.summary[index] ?? "No major performance change detected."}</strong>
+            </article>
+          ))}
+        </div>
+        <div className="ai-insight-grid">
+          {(insightsResult.data ?? []).map((insight) => (
+            <article key={insight.id}>
+              <div><StatusBadge status={insight.severity} /><Link className="strong-link" href={insight.severity === "important" ? "/reports" : "/sales/follow-up"}>Review</Link></div>
+              <strong>{insight.title}</strong>
+              <p>{insight.summary}</p>
+            </article>
+          ))}
+          {!(insightsResult.data ?? []).length ? <article><strong>No AI insights yet</strong><p>No major performance changes detected.</p></article> : null}
+        </div>
       </section>
       <section className="dashboard-grid">
         <div className="panel">

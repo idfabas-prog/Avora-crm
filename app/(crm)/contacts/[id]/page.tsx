@@ -14,6 +14,7 @@ import { formatMoney } from "@/lib/financial/money";
 import { getFinancialSummary } from "@/lib/financial/queries";
 import { hasWorkflowPermission } from "@/lib/workflows/permissions";
 import { statusLabels } from "@/lib/workflows/constants";
+import { AiSummaryList, ContactAiActions, LeadScoreCards } from "@/components/crm/AiForms";
 
 const tabs = ["Timeline", "Messages", "Appointments", "Opportunities", "Notes", "Tasks", "Sales", "Workflows", "Treatments", "Files"];
 
@@ -55,6 +56,8 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
     { data: refunds },
     { data: workflows },
     { data: workflowEnrollments },
+    { data: leadScores },
+    { data: aiSummaries },
     financialSummary
   ] = await Promise.all([
     supabase.from("user_profiles").select("id, full_name").eq("organization_id", profile.organizationId).order("full_name"),
@@ -74,6 +77,8 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
     supabase.from("refunds").select("id, amount_cents, status, reason, refunded_at").eq("contact_id", id).order("refunded_at", { ascending: false }),
     supabase.from("workflows").select("id, name").eq("organization_id", profile.organizationId).eq("status", "active").order("name"),
     supabase.from("workflow_enrollments").select("id, status, current_node_id, enrolled_at, completed_at, stopped_at, stop_reason, workflows(name)").eq("contact_id", id).eq("organization_id", profile.organizationId).order("created_at", { ascending: false }).limit(25),
+    supabase.from("lead_scores").select("id, score, label, factors_json, calculated_at").eq("contact_id", id).eq("organization_id", profile.organizationId).order("calculated_at", { ascending: false }).limit(1),
+    supabase.from("ai_cached_summaries").select("summary_type, content_json, generated_at").eq("organization_id", profile.organizationId).eq("entity_type", "contact").eq("entity_id", id),
     getFinancialSummary(supabase, { organizationId: profile.organizationId, locationIds: profile.locations.map((item) => item.id), contactId: id })
   ]);
 
@@ -121,6 +126,11 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
           users={userOptions}
         />
       </details>
+      <section className="panel">
+        <div className="panel-header"><h2>AI Summary</h2><ContactAiActions contactId={contact.id} /></div>
+        <LeadScoreCards scores={leadScores ?? []} />
+        <AiSummaryList context="contact" summaries={aiSummaries ?? []} />
+      </section>
       <section className="panel">
         <div className="tabs">{tabs.map((tab, index) => <button className={index === 0 ? "active" : undefined} key={tab} type="button">{tab}</button>)}</div>
         <div className="profile-grid">

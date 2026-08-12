@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   addInternalConversationNote,
   assignConversation,
@@ -19,6 +22,20 @@ export function SmsComposer({
   templates: TemplateOption[];
   optedOut: boolean;
 }) {
+  const [body, setBody] = useState("");
+
+  useEffect(() => {
+    function useSuggestedReply(event: Event) {
+      const detail = (event as CustomEvent<{ reply?: string }>).detail;
+      if (detail?.reply) {
+        setBody(detail.reply);
+      }
+    }
+
+    window.addEventListener("avora:use-suggested-reply", useSuggestedReply);
+    return () => window.removeEventListener("avora:use-suggested-reply", useSuggestedReply);
+  }, []);
+
   return (
     <ActionForm action={sendConversationSms} submitLabel="Send SMS" successMessage="Message queued">
       <input name="conversation_id" type="hidden" value={conversationId} />
@@ -30,7 +47,7 @@ export function SmsComposer({
           {templates.map((template) => <option key={template.id} value={template.body}>{template.name}</option>)}
         </select>
       </label>
-      <label><span>Message</span><textarea name="body" rows={4} /></label>
+      <label><span>Message</span><textarea name="body" onChange={(event) => setBody(event.target.value)} rows={4} value={body} /></label>
     </ActionForm>
   );
 }

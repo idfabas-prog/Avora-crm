@@ -7,6 +7,7 @@ import { LocationSwitcher } from "./LocationSwitcher";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard" },
+  { label: "Ask Avora", href: "/ai" },
   { label: "Contacts", href: "/contacts" },
   { label: "Conversations", href: "/conversations" },
   { label: "Opportunities", href: "/opportunities" },

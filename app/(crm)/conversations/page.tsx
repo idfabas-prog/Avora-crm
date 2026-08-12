@@ -9,6 +9,7 @@ import { requireCurrentProfile } from "@/lib/auth/profile";
 import { allowedLocationIds, getSelectedLocationId } from "@/lib/crm/location";
 import { formatCurrency, formatDateTime, fromDbStatus } from "@/lib/crm/constants";
 import { formatPhoneNumber } from "@/lib/communications/phone";
+import { ConversationAiActions } from "@/components/crm/AiForms";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -65,7 +66,8 @@ export default async function ConversationsPage({ searchParams }: { searchParams
     { data: appointments },
     { data: opportunities },
     { data: contacts },
-    { data: appointmentTypes }
+    { data: appointmentTypes },
+    { data: aiSummaries }
   ] = await Promise.all([
     activeConversation
       ? supabase.from("messages").select("id, direction, body, status, is_internal_note, simulated, created_at, sent_at, received_at, delivered_at, failed_at, sender_user:user_profiles!messages_sender_user_id_fkey(full_name)").eq("conversation_id", activeConversation.id).order("created_at", { ascending: true }).range(0, 99)
@@ -76,7 +78,8 @@ export default async function ConversationsPage({ searchParams }: { searchParams
     activeConversation ? supabase.from("appointments").select("id, start_at, appointment_types(name), provider:user_profiles!appointments_provider_id_fkey(full_name)").eq("contact_id", activeConversation.contact_id).gte("start_at", new Date().toISOString()).order("start_at").limit(1) : Promise.resolve({ data: [] }),
     activeConversation ? supabase.from("opportunities").select("id, name, pipeline_stages(name)").eq("contact_id", activeConversation.contact_id).order("updated_at", { ascending: false }).limit(1) : Promise.resolve({ data: [] }),
     supabase.from("contacts").select("id, first_name, last_name").eq("organization_id", profile.organizationId).order("last_name"),
-    supabase.from("appointment_types").select("id, name, duration_minutes").eq("organization_id", profile.organizationId).eq("active", true).order("name")
+    supabase.from("appointment_types").select("id, name, duration_minutes").eq("organization_id", profile.organizationId).eq("active", true).order("name"),
+    activeConversation ? supabase.from("ai_cached_summaries").select("summary_type, content_json, generated_at").eq("organization_id", profile.organizationId).eq("entity_type", "conversation").eq("entity_id", activeConversation.id) : Promise.resolve({ data: [] })
   ]);
 
   const filteredConversations = q
@@ -143,6 +146,7 @@ export default async function ConversationsPage({ searchParams }: { searchParams
               <SmsComposer conversationId={activeConversation.id} optedOut={Boolean(preference?.opted_out || preference?.allowed === false)} templates={templateOptions} />
               <InternalNoteForm conversationId={activeConversation.id} />
               <DevelopmentSimulator conversationId={activeConversation.id} />
+              <ConversationAiActions conversationId={activeConversation.id} summaries={aiSummaries ?? []} />
             </>
           ) : <p className="quiet-text">No conversations found.</p>}
         </main>
