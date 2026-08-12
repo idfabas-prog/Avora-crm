@@ -8,8 +8,9 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { requireCurrentProfile } from "@/lib/auth/profile";
 import { formatCurrency, formatDate, formatDateTime, formatTime, fromDbStatus } from "@/lib/crm/constants";
+import { formatPhoneNumber } from "@/lib/communications/phone";
 
-const tabs = ["Timeline", "Appointments", "Opportunities", "Notes", "Tasks", "Sales", "Treatments", "Files"];
+const tabs = ["Timeline", "Messages", "Appointments", "Opportunities", "Notes", "Tasks", "Sales", "Treatments", "Files"];
 
 export default async function ContactProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -40,7 +41,10 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
     { data: appointmentTypes },
     { data: auditLogs },
     { data: allContacts },
-    { data: allOpportunities }
+    { data: allOpportunities },
+    { data: conversations },
+    { data: messages },
+    { data: smsPreference }
   ] = await Promise.all([
     supabase.from("user_profiles").select("id, full_name").eq("organization_id", profile.organizationId).order("full_name"),
     supabase.from("contact_notes").select("id, body, created_at, user_profiles(full_name)").eq("contact_id", id).order("created_at", { ascending: false }),
@@ -50,7 +54,10 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
     supabase.from("appointment_types").select("id, name, duration_minutes").eq("organization_id", profile.organizationId).eq("active", true).order("name"),
     supabase.from("audit_logs").select("id, action, entity_table, entity_id, created_at, metadata").eq("organization_id", profile.organizationId).or(`entity_id.eq.${id},metadata->>contact_id.eq.${id}`).order("created_at", { ascending: false }).limit(30),
     supabase.from("contacts").select("id, first_name, last_name").eq("organization_id", profile.organizationId).order("last_name"),
-    supabase.from("opportunities").select("id, name").eq("organization_id", profile.organizationId).order("name")
+    supabase.from("opportunities").select("id, name").eq("organization_id", profile.organizationId).order("name"),
+    supabase.from("conversations").select("id, status, last_message_at, unread_count").eq("contact_id", id).order("last_message_at", { ascending: false }),
+    supabase.from("messages").select("id, conversation_id, direction, body, status, simulated, is_internal_note, created_at").eq("contact_id", id).order("created_at", { ascending: false }).limit(20),
+    supabase.from("contact_communication_preferences").select("allowed, opted_out, opt_out_at").eq("contact_id", id).eq("channel", "sms").maybeSingle()
   ]);
 
   const location = Array.isArray(contact.locations) ? contact.locations[0] : contact.locations;
@@ -68,7 +75,7 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
         <div>
           <StatusBadge status={fromDbStatus(contact.status)} />
           <h2>{contact.first_name} {contact.last_name}</h2>
-          <p>{contact.phone ?? "No phone"} · {contact.email ?? "No email"}</p>
+          <p>{formatPhoneNumber(contact.phone)} · {contact.email ?? "No email"}</p>
         </div>
         <dl>
           <div><dt>Location</dt><dd>{location?.name ?? "Unassigned"}</dd></div>
@@ -103,7 +110,16 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
             <h2>Timeline</h2>
             <div className="timeline">
               <article><span /><div><strong>Contact Created</strong><p>{formatDateTime(contact.created_at)}</p></div></article>
+              {(messages ?? []).slice(0, 8).map((message) => <article key={message.id}><span /><div><strong>{message.is_internal_note ? "Internal Note" : message.direction === "inbound" ? "Inbound SMS" : "Outbound SMS"}</strong><p>{formatDateTime(message.created_at)} · {message.status}{message.simulated ? " · simulated" : ""}</p></div></article>)}
               {(auditLogs ?? []).map((log) => <article key={log.id}><span /><div><strong>{log.action}</strong><p>{formatDateTime(log.created_at)} · {log.entity_table}</p></div></article>)}
+            </div>
+          </section>
+          <section>
+            <h2>Messages</h2>
+            <p className={smsPreference?.opted_out ? "form-error" : "quiet-text"}>{smsPreference?.opted_out ? `SMS opted out ${formatDateTime(smsPreference.opt_out_at)}` : "SMS is available when consent and location configuration allow it."}</p>
+            <div className="record-list">
+              {(conversations ?? []).map((conversation) => <article key={conversation.id}><strong>Conversation</strong><p>{conversation.status} · {formatDateTime(conversation.last_message_at)} · {conversation.unread_count} unread</p><a className="strong-link" href={`/conversations?conversation=${conversation.id}`}>Open conversation</a></article>)}
+              {(messages ?? []).map((message) => <article key={message.id}><strong>{message.is_internal_note ? "Internal note" : message.direction === "inbound" ? "Inbound SMS" : "Outbound SMS"}</strong><p>{message.body}</p><span>{message.status}{message.simulated ? " · simulated" : ""} · {formatDateTime(message.created_at)}</span></article>)}
             </div>
           </section>
           <section>
