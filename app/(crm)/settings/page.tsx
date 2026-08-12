@@ -3,13 +3,18 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { requireCurrentProfile } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
 import { formatPhoneNumber } from "@/lib/communications/phone";
+import { formatMoney } from "@/lib/financial/money";
+import { stripeConfigured, verifyStripeWebhookConfigured } from "@/lib/financial/stripe-service";
 
 export default async function SettingsPage() {
   const profile = await requireCurrentProfile();
   const supabase = await createClient();
-  const [{ data: numbers }, { data: settings }] = await Promise.all([
+  const [{ data: numbers }, { data: settings }, { data: paymentRules }, { data: commissionRules }, { data: royaltyRules }] = await Promise.all([
     supabase.from("communication_numbers").select("id, location_id, provider, phone_number, friendly_name, supports_sms, supports_voice, active, is_primary, is_test_number").eq("organization_id", profile.organizationId).order("friendly_name"),
-    supabase.from("communication_settings").select("id, location_id, messaging_enabled, missed_call_text_back_enabled, appointment_confirmation_enabled, reminder_24h_enabled, reminder_1h_enabled").eq("organization_id", profile.organizationId)
+    supabase.from("communication_settings").select("id, location_id, messaging_enabled, missed_call_text_back_enabled, appointment_confirmation_enabled, reminder_24h_enabled, reminder_1h_enabled").eq("organization_id", profile.organizationId),
+    supabase.from("payment_method_rules").select("id, payment_method, provider, fee_percentage, fee_fixed_cents, affects_commission_basis, affects_royalty_basis, active").eq("organization_id", profile.organizationId).order("payment_method"),
+    supabase.from("commission_rules").select("id, rate, basis, active, user_profiles(full_name), services(name), packages(name), category").eq("organization_id", profile.organizationId).order("created_at"),
+    supabase.from("royalty_rules").select("id, rate, basis, active, category, services(name), packages(name)").eq("organization_id", profile.organizationId).order("created_at")
   ]);
 
   return (
@@ -45,6 +50,41 @@ export default async function SettingsPage() {
             );
           })}
         </div>
+      </section>
+      <section className="dashboard-grid">
+        <section className="panel">
+          <div className="panel-header"><h2>Payments</h2><span>Development safe by default</span></div>
+          <dl className="settings-list">
+            <div><dt>Stripe</dt><dd>{stripeConfigured() ? "Configured" : "Not Configured"}</dd></div>
+            <div><dt>Stripe Webhook</dt><dd>{verifyStripeWebhookConfigured() ? "Configured" : "Not Configured"}</dd></div>
+            <div><dt>Live Payments</dt><dd>{process.env.PAYMENTS_ALLOW_LIVE_CHARGES === "true" ? "Enabled" : "Disabled"}</dd></div>
+            <div><dt>Mode</dt><dd>{process.env.PAYMENTS_MODE ?? "development"}</dd></div>
+          </dl>
+          <div className="record-list">
+            {(paymentRules ?? []).map((rule) => <article key={rule.id}><strong>{rule.payment_method} · {rule.provider}</strong><p>{rule.active ? "Active" : "Inactive"} · fee {(Number(rule.fee_percentage) * 100).toFixed(2)}% + {formatMoney(rule.fee_fixed_cents)}</p><span>Commission basis {rule.affects_commission_basis ? "affected" : "not affected"} · Royalty basis {rule.affects_royalty_basis ? "affected" : "not affected"}</span></article>)}
+          </div>
+        </section>
+        <section className="panel">
+          <div className="panel-header"><h2>Commissions</h2><span>Rule precedence lives in the financial engine</span></div>
+          <div className="record-list">
+            {(commissionRules ?? []).map((rule) => {
+              const user = Array.isArray(rule.user_profiles) ? rule.user_profiles[0] : rule.user_profiles;
+              const service = Array.isArray(rule.services) ? rule.services[0] : rule.services;
+              const pack = Array.isArray(rule.packages) ? rule.packages[0] : rule.packages;
+              return <article key={rule.id}><strong>{user?.full_name ?? "Organization default"}</strong><p>{service?.name ?? pack?.name ?? rule.category ?? "Default"} · {(Number(rule.rate) * 100).toFixed(2)}% · {rule.basis}</p><span>{rule.active ? "Active" : "Inactive"}</span></article>;
+            })}
+          </div>
+        </section>
+        <section className="panel">
+          <div className="panel-header"><h2>Royalties</h2><span>Configurable, not hardcoded</span></div>
+          <div className="record-list">
+            {(royaltyRules ?? []).map((rule) => {
+              const service = Array.isArray(rule.services) ? rule.services[0] : rule.services;
+              const pack = Array.isArray(rule.packages) ? rule.packages[0] : rule.packages;
+              return <article key={rule.id}><strong>{service?.name ?? pack?.name ?? rule.category ?? "Default"}</strong><p>{(Number(rule.rate) * 100).toFixed(2)}% · {rule.basis}</p><span>{rule.active ? "Active" : "Inactive"}</span></article>;
+            })}
+          </div>
+        </section>
       </section>
     </div>
   );

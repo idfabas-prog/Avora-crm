@@ -9,6 +9,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requireCurrentProfile } from "@/lib/auth/profile";
 import { formatCurrency, formatDate, formatDateTime, formatTime, fromDbStatus } from "@/lib/crm/constants";
 import { formatPhoneNumber } from "@/lib/communications/phone";
+import { formatMoney } from "@/lib/financial/money";
+import { getFinancialSummary } from "@/lib/financial/queries";
 
 const tabs = ["Timeline", "Messages", "Appointments", "Opportunities", "Notes", "Tasks", "Sales", "Treatments", "Files"];
 
@@ -44,7 +46,11 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
     { data: allOpportunities },
     { data: conversations },
     { data: messages },
-    { data: smsPreference }
+    { data: smsPreference },
+    { data: sales },
+    { data: payments },
+    { data: refunds },
+    financialSummary
   ] = await Promise.all([
     supabase.from("user_profiles").select("id, full_name").eq("organization_id", profile.organizationId).order("full_name"),
     supabase.from("contact_notes").select("id, body, created_at, user_profiles(full_name)").eq("contact_id", id).order("created_at", { ascending: false }),
@@ -57,7 +63,11 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
     supabase.from("opportunities").select("id, name").eq("organization_id", profile.organizationId).order("name"),
     supabase.from("conversations").select("id, status, last_message_at, unread_count").eq("contact_id", id).order("last_message_at", { ascending: false }),
     supabase.from("messages").select("id, conversation_id, direction, body, status, simulated, is_internal_note, created_at").eq("contact_id", id).order("created_at", { ascending: false }).limit(20),
-    supabase.from("contact_communication_preferences").select("allowed, opted_out, opt_out_at").eq("contact_id", id).eq("channel", "sms").maybeSingle()
+    supabase.from("contact_communication_preferences").select("allowed, opted_out, opt_out_at").eq("contact_id", id).eq("channel", "sms").maybeSingle(),
+    supabase.from("sales").select("id, sale_date, status, total_amount_cents, paid_amount_cents, balance_due_cents, currency, sale_items(description)").eq("contact_id", id).order("sale_date", { ascending: false }),
+    supabase.from("payments").select("id, amount_cents, currency, payment_method, payment_provider, status, received_at, simulated").eq("contact_id", id).order("received_at", { ascending: false }),
+    supabase.from("refunds").select("id, amount_cents, status, reason, refunded_at").eq("contact_id", id).order("refunded_at", { ascending: false }),
+    getFinancialSummary(supabase, { organizationId: profile.organizationId, locationIds: profile.locations.map((item) => item.id), contactId: id })
   ]);
 
   const location = Array.isArray(contact.locations) ? contact.locations[0] : contact.locations;
@@ -81,7 +91,7 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
           <div><dt>Location</dt><dd>{location?.name ?? "Unassigned"}</dd></div>
           <div><dt>Assigned</dt><dd>{assigned?.full_name ?? "Unassigned"}</dd></div>
           <div><dt>Lead Source</dt><dd>{contact.lead_source ?? "—"}</dd></div>
-          <div><dt>Lifetime Value</dt><dd>{formatCurrency(contact.lifetime_value_cents)}</dd></div>
+          <div><dt>Net Collected LTV</dt><dd>{formatMoney(financialSummary.netCollectedCents)}</dd></div>
           <div><dt>Created</dt><dd>{formatDate(contact.created_at)}</dd></div>
         </dl>
       </section>
@@ -153,6 +163,20 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
             </div>
           </section>
           <section>
+            <h2>Sales</h2>
+            <div className="placeholder-metrics compact">
+              <div><strong>{formatMoney(financialSummary.grossSalesCents)}</strong><span>Gross Sales</span></div>
+              <div><strong>{formatMoney(financialSummary.collectedCents)}</strong><span>Collected</span></div>
+              <div><strong>{formatMoney(financialSummary.refundedCents)}</strong><span>Refunded</span></div>
+              <div><strong>{formatMoney(financialSummary.outstandingCents)}</strong><span>Balance</span></div>
+            </div>
+            <div className="record-list">
+              {(sales ?? []).map((sale) => <article key={sale.id}><strong>{formatMoney(sale.total_amount_cents, sale.currency)} sale</strong><p>{formatDateTime(sale.sale_date)} · {fromDbStatus(sale.status)} · balance {formatMoney(sale.balance_due_cents, sale.currency)}</p><span>{(sale.sale_items ?? []).map((item) => item.description).join(", ")}</span></article>)}
+              {(payments ?? []).map((payment) => <article key={payment.id}><strong>{formatMoney(payment.amount_cents, payment.currency)} payment</strong><p>{formatDateTime(payment.received_at)} · {fromDbStatus(payment.payment_method)} · {payment.payment_provider}{payment.simulated ? " · simulated" : ""}</p><StatusBadge status={fromDbStatus(payment.status)} /></article>)}
+              {(refunds ?? []).map((refund) => <article key={refund.id}><strong>{formatMoney(refund.amount_cents)} refund</strong><p>{formatDateTime(refund.refunded_at)} · {refund.reason ?? "No reason"}</p><StatusBadge status={fromDbStatus(refund.status)} /></article>)}
+            </div>
+          </section>
+          <section>
             <h2>Tasks</h2>
             <AddTaskForm contactId={contact.id} contacts={contactOptions} locations={locationOptions} opportunities={opportunityOptions} users={userOptions} />
             <div className="record-list">
@@ -164,7 +188,7 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
           </section>
           <section>
             <h2>Prepared for Later</h2>
-            <p className="quiet-text">Sales, treatments, and files remain structured placeholders for future phases.</p>
+            <p className="quiet-text">Treatments and files remain structured placeholders for future phases.</p>
           </section>
         </div>
       </section>

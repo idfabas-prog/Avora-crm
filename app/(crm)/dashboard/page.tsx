@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requireCurrentProfile } from "@/lib/auth/profile";
 import { allowedLocationIds, getSelectedLocationId } from "@/lib/crm/location";
 import { formatDateTime, fromDbStatus } from "@/lib/crm/constants";
+import { formatMoney } from "@/lib/financial/money";
+import { getFinancialSummary } from "@/lib/financial/queries";
 
 async function countQuery(query: PromiseLike<{ count: number | null; error: { message: string } | null }>) {
   const result = await query;
@@ -39,7 +41,8 @@ export default async function DashboardPage() {
     usersResult,
     contactsResult,
     opportunitiesResult,
-    tasksResult
+    tasksResult,
+    financialSummary
   ] = await Promise.all([
     countQuery(withLocation(supabase.from("contacts").select("*", { count: "exact", head: true }).eq("organization_id", profile.organizationId).eq("status", "new_lead").gte("created_at", monthStart))),
     countQuery(withLocation(supabase.from("opportunities").select("*", { count: "exact", head: true }).eq("organization_id", profile.organizationId))),
@@ -51,7 +54,8 @@ export default async function DashboardPage() {
     supabase.from("user_profiles").select("id, full_name").eq("organization_id", profile.organizationId).order("full_name"),
     supabase.from("contacts").select("id, first_name, last_name").eq("organization_id", profile.organizationId).order("last_name"),
     supabase.from("opportunities").select("id, name").eq("organization_id", profile.organizationId).order("name"),
-    withLocation(supabase.from("tasks").select("id, title, status, due_at, user_profiles(full_name)").eq("organization_id", profile.organizationId).in("status", ["open", "in_progress"]).order("due_at", { ascending: true }).limit(8))
+    withLocation(supabase.from("tasks").select("id, title, status, due_at, user_profiles(full_name)").eq("organization_id", profile.organizationId).in("status", ["open", "in_progress"]).order("due_at", { ascending: true }).limit(8)),
+    getFinancialSummary(supabase, { organizationId: profile.organizationId, locationIds })
   ]);
 
   const liveMetrics = [
@@ -62,7 +66,7 @@ export default async function DashboardPage() {
     { label: "Completed Appointments", value: String(completedAppointments), detail: "Live this month" },
     { label: "No Shows", value: String(noShows), detail: "Live this month" },
     { label: "Open Tasks", value: String(openTasks), detail: "Live open/in-progress" },
-    { label: "Revenue", value: "Demo", detail: "Placeholder until sales/payments phase" }
+    { label: "Net Collected", value: formatMoney(financialSummary.netCollectedCents), detail: "Live collected minus refunds" }
   ];
 
   const userOptions = (usersResult.data ?? []).map((user) => ({ id: user.id, name: user.full_name }));
@@ -73,7 +77,7 @@ export default async function DashboardPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        description="Live operational metrics from Supabase. Revenue and sales metrics remain labeled placeholders until Phase 2 has sales/payment tables."
+        description="Live operational and financial metrics from Supabase. Revenue labels distinguish booked sales from collected cash."
         title="Dashboard"
       />
       <section className="metric-grid">
@@ -98,11 +102,12 @@ export default async function DashboardPage() {
           </div>
         </div>
         <div className="panel">
-          <div className="panel-header"><h2>Development Placeholders</h2><span>Not production metrics</span></div>
+          <div className="panel-header"><h2>Financial Snapshot</h2><span>Live Phase 4 metrics</span></div>
           <div className="placeholder-metrics">
-            <StatCard detail="Waiting for sales/payments data model" label="Sales" value="Demo" />
-            <StatCard detail="Waiting for sales/payments data model" label="Close Rate" value="Demo" />
-            <StatCard detail="Waiting for sales/payments data model" label="Average Ticket" value="Demo" />
+            <StatCard detail="Booked non-cancelled sales" label="Gross Sales" value={formatMoney(financialSummary.grossSalesCents)} />
+            <StatCard detail="Succeeded payments" label="Collected Revenue" value={formatMoney(financialSummary.collectedCents)} />
+            <StatCard detail="Gross sales / sale count" label="Average Ticket" value={formatMoney(financialSummary.averageTicketCents)} />
+            <StatCard detail="Remaining balances" label="Outstanding" value={formatMoney(financialSummary.outstandingCents)} />
           </div>
         </div>
       </section>
