@@ -182,6 +182,9 @@ export async function addPayment(formData: FormData) {
     saleId: sale.id,
     payload: { payment: { id: data.id, amount_cents: amountCents, status: optional(formData.get("status")) ?? "succeeded" }, sale: { id: sale.id } }
   });
+  if ((optional(formData.get("status")) ?? "succeeded") === "succeeded") {
+    await supabase.rpc("create_clinical_entitlements_for_sale", { target_sale_id: sale.id, actor_user_id: profile.id });
+  }
   revalidatePath("/payments");
   revalidatePath("/sales");
   revalidatePath("/dashboard");

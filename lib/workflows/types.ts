@@ -40,6 +40,17 @@ export const triggerTypes = [
   "payment.failed",
   "refund.completed",
   "balance.created",
+  "treatment.session_created",
+  "treatment.started",
+  "treatment.completed",
+  "treatment.cancelled",
+  "treatment.no_show",
+  "treatment.followup_due",
+  "treatment.plan_completed",
+  "entitlement.remaining_low",
+  "entitlement.exhausted",
+  "consent.signed",
+  "clinical.photo_added",
   "manual.enrolled"
 ] as const;
 
@@ -79,6 +90,9 @@ export const actionTypes = [
   "close_conversation",
   "reopen_conversation",
   "create_internal_task_after_payment",
+  "create_clinical_followup_task",
+  "create_appointment_task",
+  "notify_provider",
   "mark_opportunity_sold_after_payment",
   "enroll_workflow",
   "remove_from_workflow",

@@ -4,10 +4,12 @@ import { EditContactForm } from "@/components/crm/ContactForms";
 import { NoteForm } from "@/components/crm/NoteForm";
 import { AddTaskForm, TaskStatusForm } from "@/components/crm/TaskForms";
 import { ManualEnrollmentForm, StopEnrollmentForm } from "@/components/crm/WorkflowForms";
+import { ClinicalDocumentMetadataForm, ClinicalNoteActions, ClinicalNoteForm, ClinicalPhotoMetadataForm, EntitlementAdjustmentForm, TreatmentPlanForm, TreatmentSessionForm } from "@/components/crm/ClinicalForms";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { requireCurrentProfile } from "@/lib/auth/profile";
+import { hasClinicalPermission } from "@/lib/clinical/permissions";
 import { formatCurrency, formatDate, formatDateTime, formatTime, fromDbStatus } from "@/lib/crm/constants";
 import { formatPhoneNumber } from "@/lib/communications/phone";
 import { formatMoney } from "@/lib/financial/money";
@@ -38,6 +40,11 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
     notFound();
   }
 
+  const canViewClinical = hasClinicalPermission(profile, "clinical.read");
+  const canWriteClinical = hasClinicalPermission(profile, "clinical.write");
+  const canReadClinicalNotes = hasClinicalPermission(profile, "clinical.notes.read");
+  const canManageEntitlements = hasClinicalPermission(profile, "clinical.entitlements.adjust");
+
   const [
     { data: users },
     { data: notes },
@@ -58,6 +65,18 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
     { data: workflowEnrollments },
     { data: leadScores },
     { data: aiSummaries },
+    { data: clinicalProfiles },
+    { data: packageEntitlements },
+    { data: treatmentPlans },
+    { data: treatmentPlanItems },
+    { data: treatmentSessions },
+    { data: clinicalNotes },
+    { data: clinicalAddenda },
+    { data: consentRecords },
+    { data: clinicalPhotos },
+    { data: clinicalDocuments },
+    { data: treatmentFollowups },
+    { data: clinicalServices },
     financialSummary
   ] = await Promise.all([
     supabase.from("user_profiles").select("id, full_name").eq("organization_id", profile.organizationId).order("full_name"),
@@ -79,6 +98,18 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
     supabase.from("workflow_enrollments").select("id, status, current_node_id, enrolled_at, completed_at, stopped_at, stop_reason, workflows(name)").eq("contact_id", id).eq("organization_id", profile.organizationId).order("created_at", { ascending: false }).limit(25),
     supabase.from("lead_scores").select("id, score, label, factors_json, calculated_at").eq("contact_id", id).eq("organization_id", profile.organizationId).order("calculated_at", { ascending: false }).limit(1),
     supabase.from("ai_cached_summaries").select("summary_type, content_json, generated_at").eq("organization_id", profile.organizationId).eq("entity_type", "contact").eq("entity_id", id),
+    canViewClinical ? supabase.from("clinical_profiles").select("id, clinical_status, primary_location_id, locations(name)").eq("contact_id", id).eq("organization_id", profile.organizationId) : Promise.resolve({ data: [] }),
+    hasClinicalPermission(profile, "clinical.entitlements.read") ? supabase.from("package_entitlements").select("id, location_id, service_id, package_id, total_quantity, used_quantity, remaining_quantity, status, purchased_at, services(name), packages(name), locations(name)").eq("contact_id", id).eq("organization_id", profile.organizationId).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    hasClinicalPermission(profile, "clinical.treatment_plans.read") ? supabase.from("treatment_plans").select("id, location_id, provider_id, name, description, status, start_date, target_completion_date, completed_at, provider:user_profiles!treatment_plans_provider_id_fkey(full_name), locations(name)").eq("contact_id", id).eq("organization_id", profile.organizationId).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    hasClinicalPermission(profile, "clinical.treatment_plans.read") ? supabase.from("treatment_plan_items").select("id, treatment_plan_id, service_id, package_entitlement_id, planned_sessions, completed_sessions, interval_days, notes, services(name)").in("treatment_plan_id", ["00000000-0000-0000-0000-000000000000"]) : Promise.resolve({ data: [] }),
+    hasClinicalPermission(profile, "clinical.sessions.read") ? supabase.from("treatment_sessions").select("id, location_id, treatment_plan_id, treatment_plan_item_id, package_entitlement_id, service_id, provider_id, status, documentation_status, scheduled_at, completed_at, session_number, treatment_area, services(name), locations(name), provider:user_profiles!treatment_sessions_provider_id_fkey(full_name)").eq("contact_id", id).eq("organization_id", profile.organizationId).order("scheduled_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    canReadClinicalNotes ? supabase.from("clinical_notes").select("id, note_type, body, locked_at, signed_at, created_at, author:user_profiles!clinical_notes_author_user_id_fkey(full_name)").eq("contact_id", id).eq("organization_id", profile.organizationId).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    canReadClinicalNotes ? supabase.from("clinical_note_addenda").select("id, clinical_note_id, addendum_text, created_at, author:user_profiles!clinical_note_addenda_author_user_id_fkey(full_name)").eq("organization_id", profile.organizationId).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    hasClinicalPermission(profile, "clinical.consents.read") ? supabase.from("consent_records").select("id, status, signed_by_name, signed_at, consent_templates(name, version, consent_type)").eq("contact_id", id).eq("organization_id", profile.organizationId).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    hasClinicalPermission(profile, "clinical.photos.read") ? supabase.from("clinical_photos").select("id, photo_type, body_area, capture_date, storage_path, notes, services(name)").eq("contact_id", id).eq("organization_id", profile.organizationId).order("capture_date", { ascending: false }) : Promise.resolve({ data: [] }),
+    hasClinicalPermission(profile, "clinical.documents.read") ? supabase.from("clinical_documents").select("id, document_type, filename, storage_path, uploaded_at, description, status").eq("contact_id", id).eq("organization_id", profile.organizationId).order("uploaded_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    hasClinicalPermission(profile, "clinical.sessions.read") ? supabase.from("treatment_followups").select("id, status, due_at, followup_type, notes, treatment_session_id").eq("contact_id", id).eq("organization_id", profile.organizationId).order("due_at", { ascending: true }) : Promise.resolve({ data: [] }),
+    canViewClinical ? supabase.from("services").select("id, name").eq("organization_id", profile.organizationId).eq("active", true).order("name") : Promise.resolve({ data: [] }),
     getFinancialSummary(supabase, { organizationId: profile.organizationId, locationIds: profile.locations.map((item) => item.id), contactId: id })
   ]);
 
@@ -90,6 +121,17 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
   const opportunityOptions = (allOpportunities ?? []).map((item) => ({ id: item.id, name: item.name }));
   const appointmentTypeOptions = (appointmentTypes ?? []).map((item) => ({ id: item.id, name: item.name, duration_minutes: item.duration_minutes }));
   const workflowOptions = (workflows ?? []).map((workflow) => ({ id: workflow.id, name: workflow.name }));
+  const clinicalServiceOptions = (clinicalServices ?? []).map((service) => ({ id: service.id, name: service.name }));
+  const entitlementOptions = (packageEntitlements ?? []).map((entitlement) => {
+    const service = Array.isArray(entitlement.services) ? entitlement.services[0] : entitlement.services;
+    const pack = Array.isArray(entitlement.packages) ? entitlement.packages[0] : entitlement.packages;
+    return { id: entitlement.id, name: `${service?.name ?? pack?.name ?? "Entitlement"} (${entitlement.remaining_quantity}/${entitlement.total_quantity} remaining)` };
+  });
+  const planOptions = (treatmentPlans ?? []).map((plan) => ({ id: plan.id, name: plan.name }));
+  const planItemOptions = (treatmentPlanItems ?? []).map((item) => {
+    const service = Array.isArray(item.services) ? item.services[0] : item.services;
+    return { id: item.id, name: `${service?.name ?? "Plan item"} (${item.completed_sessions}/${item.planned_sessions})` };
+  });
 
   return (
     <div className="page-stack">
@@ -233,8 +275,120 @@ export default async function ContactProfilePage({ params }: { params: Promise<{
             </div>
           </section>
           <section>
-            <h2>Prepared for Later</h2>
-            <p className="quiet-text">Treatments and files remain structured placeholders for future phases.</p>
+            <h2>Treatments</h2>
+            {canViewClinical ? (
+              <>
+                <div className="clinical-kpi-grid">
+                  <article className="settings-card"><strong>{(clinicalProfiles ?? []).length}</strong><span>Clinical Profiles</span></article>
+                  <article className="settings-card"><strong>{(treatmentPlans ?? []).length}</strong><span>Treatment Plans</span></article>
+                  <article className="settings-card"><strong>{(treatmentSessions ?? []).length}</strong><span>Sessions</span></article>
+                  <article className="settings-card"><strong>{(packageEntitlements ?? []).reduce((sum, item) => sum + Number(item.remaining_quantity ?? 0), 0)}</strong><span>Remaining Units</span></article>
+                </div>
+                {canWriteClinical ? (
+                  <div className="record-list">
+                    <details>
+                      <summary className="summary-action">Create Treatment Plan</summary>
+                      <TreatmentPlanForm contactId={contact.id} entitlements={entitlementOptions} locations={locationOptions} providers={userOptions} services={clinicalServiceOptions} />
+                    </details>
+                    <details>
+                      <summary className="summary-action">Create Treatment Session</summary>
+                      <TreatmentSessionForm contactId={contact.id} entitlements={entitlementOptions} locations={locationOptions} planItems={planItemOptions} plans={planOptions} providers={userOptions} services={clinicalServiceOptions} />
+                    </details>
+                  </div>
+                ) : null}
+                <div className="record-list">
+                  {(packageEntitlements ?? []).map((entitlement) => {
+                    const service = Array.isArray(entitlement.services) ? entitlement.services[0] : entitlement.services;
+                    const pack = Array.isArray(entitlement.packages) ? entitlement.packages[0] : entitlement.packages;
+                    const location = Array.isArray(entitlement.locations) ? entitlement.locations[0] : entitlement.locations;
+                    const total = Number(entitlement.total_quantity ?? 0);
+                    const used = Number(entitlement.used_quantity ?? 0);
+                    const percent = total ? Math.round((used / total) * 100) : 0;
+                    return (
+                      <article key={entitlement.id}>
+                        <strong>{service?.name ?? pack?.name ?? "Package Entitlement"}</strong>
+                        <p>{location?.name ?? "Unassigned"} · {used}/{total} used · {entitlement.remaining_quantity} remaining</p>
+                        <div className="entitlement-meter"><span style={{ width: `${percent}%` }} /></div>
+                        {canManageEntitlements ? <EntitlementAdjustmentForm entitlementId={entitlement.id} /> : null}
+                      </article>
+                    );
+                  })}
+                  {(treatmentPlans ?? []).map((plan) => {
+                    const provider = Array.isArray(plan.provider) ? plan.provider[0] : plan.provider;
+                    return <article key={plan.id}><strong>{plan.name}</strong><p>{fromDbStatus(plan.status)} · Provider {provider?.full_name ?? "Unassigned"} · Started {formatDate(plan.start_date)}</p><span>{plan.description ?? "No description"}</span></article>;
+                  })}
+                  {(treatmentSessions ?? []).map((session) => {
+                    const service = Array.isArray(session.services) ? session.services[0] : session.services;
+                    const provider = Array.isArray(session.provider) ? session.provider[0] : session.provider;
+                    return <article key={session.id}><strong>{service?.name ?? "Treatment Session"}</strong><p>{formatDateTime(session.scheduled_at)} · {provider?.full_name ?? "Unassigned"} · {session.treatment_area ?? "Area not set"}</p><StatusBadge status={fromDbStatus(session.status)} /><a className="strong-link" href={`/clinical/sessions/${session.id}`}>Open clinical session</a></article>;
+                  })}
+                </div>
+              </>
+            ) : (
+              <p className="quiet-text">Clinical details are restricted for this role.</p>
+            )}
+          </section>
+          <section>
+            <h2>Clinical Notes</h2>
+            {canReadClinicalNotes ? (
+              <>
+                {hasClinicalPermission(profile, "clinical.notes.write") ? <ClinicalNoteForm contactId={contact.id} locationId={contact.location_id} /> : null}
+                <div className="record-list">
+                  {(clinicalNotes ?? []).map((note) => {
+                    const author = Array.isArray(note.author) ? note.author[0] : note.author;
+                    const noteAddenda = (clinicalAddenda ?? []).filter((addendum) => addendum.clinical_note_id === note.id);
+                    return (
+                      <article key={note.id}>
+                        <strong>{fromDbStatus(note.note_type)} · {author?.full_name ?? "Unknown"}</strong>
+                        <p>{note.body}</p>
+                        <span>{formatDateTime(note.created_at)} · {note.locked_at ? `Signed ${formatDateTime(note.signed_at)}` : "Draft"}</span>
+                        {hasClinicalPermission(profile, "clinical.notes.sign") || hasClinicalPermission(profile, "clinical.notes.write") ? <ClinicalNoteActions locked={Boolean(note.locked_at)} noteId={note.id} /> : null}
+                        {noteAddenda.map((addendum) => <p className="quiet-text" key={addendum.id}>Addendum {formatDateTime(addendum.created_at)}: {addendum.addendum_text}</p>)}
+                      </article>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <p className="quiet-text">Clinical notes are restricted for this role.</p>
+            )}
+          </section>
+          <section>
+            <h2>Files</h2>
+            {canViewClinical ? (
+              <>
+                <div className="record-list">
+                  {hasClinicalPermission(profile, "clinical.photos.write") ? (
+                    <details>
+                      <summary className="summary-action">Add Photo Metadata</summary>
+                      <ClinicalPhotoMetadataForm contactId={contact.id} locationId={contact.location_id} services={clinicalServiceOptions} />
+                    </details>
+                  ) : null}
+                  {hasClinicalPermission(profile, "clinical.documents.write") ? (
+                    <details>
+                      <summary className="summary-action">Add Document Metadata</summary>
+                      <ClinicalDocumentMetadataForm contactId={contact.id} locationId={contact.location_id} />
+                    </details>
+                  ) : null}
+                </div>
+                <div className="photo-timeline">
+                  {(clinicalPhotos ?? []).map((photo) => {
+                    const service = Array.isArray(photo.services) ? photo.services[0] : photo.services;
+                    return <article className="settings-card" key={photo.id}><strong>{fromDbStatus(photo.photo_type)}</strong><p>{service?.name ?? "Service"} · {photo.body_area ?? "Area not set"}</p><span>{formatDate(photo.capture_date)} · {photo.storage_path}</span></article>;
+                  })}
+                </div>
+                <div className="record-list">
+                  {(clinicalDocuments ?? []).map((document) => <article key={document.id}><strong>{document.filename}</strong><p>{fromDbStatus(document.document_type)} · {fromDbStatus(document.status)}</p><span>{document.storage_path}</span></article>)}
+                  {(consentRecords ?? []).map((consent) => {
+                    const template = Array.isArray(consent.consent_templates) ? consent.consent_templates[0] : consent.consent_templates;
+                    return <article key={consent.id}><strong>{template?.name ?? "Consent"}</strong><p>{fromDbStatus(consent.status)} · version {template?.version ?? 1}</p><span>{consent.signed_at ? `Signed ${formatDate(consent.signed_at)}` : "Pending"}</span></article>;
+                  })}
+                  {(treatmentFollowups ?? []).map((followup) => <article key={followup.id}><strong>{fromDbStatus(followup.followup_type)}</strong><p>Due {formatDateTime(followup.due_at)} · {fromDbStatus(followup.status)}</p><span>{followup.notes ?? "No notes"}</span></article>)}
+                </div>
+              </>
+            ) : (
+              <p className="quiet-text">Clinical files are restricted for this role.</p>
+            )}
           </section>
         </div>
       </section>

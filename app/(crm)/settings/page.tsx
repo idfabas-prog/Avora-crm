@@ -31,6 +31,9 @@ export default async function SettingsPage() {
         <Link href="/settings/commissions">Commission Rules</Link>
         <Link href="/settings/royalties">Royalty Rules</Link>
         <Link href="/settings/financial-health">Financial Health</Link>
+        <Link href="/settings/clinical/services">Clinical Services</Link>
+        <Link href="/settings/clinical/templates">Clinical Templates</Link>
+        <Link href="/settings/clinical/consents">Consent Templates</Link>
         <Link href="/settings/ai">AI Settings</Link>
         <Link href="/settings/audit-log">Audit Log</Link>
       </section>

@@ -31,7 +31,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -282,6 +283,48 @@ a {
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.clinical-dashboard-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1.25fr 1fr;
+}
+
+.clinical-dashboard-grid > section:first-child {
+  grid-row: span 2;
+}
+
+.session-detail-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.clinical-kpi-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.entitlement-meter {
+  background: var(--panel-soft);
+  border-radius: 999px;
+  height: 9px;
+  overflow: hidden;
+}
+
+.entitlement-meter span {
+  background: var(--success);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+}
+
+.photo-timeline {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .panel,
@@ -1674,6 +1717,10 @@ a:focus-visible {
   .top-header,
   .page-header,
   .dashboard-grid,
+  .clinical-dashboard-grid,
+  .clinical-kpi-grid,
+  .photo-timeline,
+  .session-detail-grid,
   .profile-hero,
   .profile-grid,
   .conversations-layout,

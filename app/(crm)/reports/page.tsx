@@ -91,6 +91,7 @@ export default async function ReportsPage() {
           <div className="header-actions">
             <Link className="secondary-button" href="/api/exports/financial?type=sales">Export Sales</Link>
             <Link className="secondary-button" href="/api/exports/financial?type=payments">Export Payments</Link>
+            <Link className="secondary-button" href="/reports/package-utilization">Package Utilization</Link>
             <Link className="primary-button" href="/sales/commissions">Commission Report</Link>
           </div>
         }
