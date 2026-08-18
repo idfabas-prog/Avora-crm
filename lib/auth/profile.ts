@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { APP_DISPLAY_NAME } from "@/lib/config/branding";
 
 export type LocationOption = {
   id: string;
@@ -95,7 +96,7 @@ export async function getCurrentProfile(): Promise<CurrentProfile | null> {
     email: profile.email,
     title: profile.title,
     role: role?.name ?? "member",
-    organization: organization?.name ?? "Avora",
+    organization: organization?.name ?? APP_DISPLAY_NAME,
     locations
   };
 }

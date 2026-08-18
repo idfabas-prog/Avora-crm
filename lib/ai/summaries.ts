@@ -1,3 +1,4 @@
+import { APP_DISPLAY_NAME } from "../config/branding.ts";
 import { renderSmsTemplate } from "../communications/templates.ts";
 
 type Message = { direction?: string | null; body?: string | null; created_at?: string | null; is_internal_note?: boolean | null };
@@ -20,16 +21,16 @@ export function buildConversationSummary(messages: Message[]) {
 
 export function suggestedReply(style: string, values: { first_name?: string | null; location_name?: string | null }) {
   const bodies: Record<string, string> = {
-    concise: "Hi {{first_name}}, thanks for reaching out. Would you like help booking your Avora consultation?",
+    concise: `Hi {{first_name}}, thanks for reaching out. Would you like help booking your ${APP_DISPLAY_NAME} consultation?`,
     warm: "Hi {{first_name}}, happy to help. We can answer questions and find a consultation time that works for you.",
     sales: "Hi {{first_name}}, we can help you take the next step. Would morning or afternoon work better for a consultation?",
-    informational: "Hi {{first_name}}, Avora can walk you through options, timing, and next steps during a consultation.",
-    follow_up: "Hi {{first_name}}, checking in from Avora. Are you still interested in moving forward?",
+    informational: `Hi {{first_name}}, ${APP_DISPLAY_NAME} can walk you through options, timing, and next steps during a consultation.`,
+    follow_up: `Hi {{first_name}}, checking in from ${APP_DISPLAY_NAME}. Are you still interested in moving forward?`,
     rebooking: "Hi {{first_name}}, we can help reschedule your consultation. What day works best?"
   };
   const rendered = renderSmsTemplate(bodies[style] ?? bodies.concise, {
     first_name: values.first_name ?? "there",
-    location_name: values.location_name ?? "Avora"
+    location_name: values.location_name ?? APP_DISPLAY_NAME
   });
   return rendered.rendered;
 }

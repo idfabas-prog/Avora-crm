@@ -43,11 +43,14 @@ export default async function ReportsPage() {
     return locationIds.length > 0 ? query.in("location_id", locationIds) : query;
   }
 
-  const [{ data: byLocation }, { data: byService }, { data: salespersonRows }, { data: royalties }] = await Promise.all([
+  const [{ data: byLocation }, { data: byService }, { data: salespersonRows }, { data: royalties }, { data: portalAccounts }, { data: memberships }, { data: paymentPlans }] = await Promise.all([
     withLocation(db.from("sales").select("location_id, total_amount_cents, paid_amount_cents, refunded_amount_cents, balance_due_cents, locations(name)").eq("organization_id", profile.organizationId)),
     db.from("sale_items").select("line_total_cents, quantity, services(category, name), packages(name), sales!inner(organization_id, location_id, status)").eq("sales.organization_id", profile.organizationId),
     withLocation(db.from("sales").select("salesperson_id, total_amount_cents, paid_amount_cents, user_profiles!sales_salesperson_id_fkey(full_name)").eq("organization_id", profile.organizationId)),
-    withLocation(db.from("royalties").select("basis_amount_cents, royalty_amount_cents, status, locations(name), sales(sale_date)").eq("organization_id", profile.organizationId))
+    withLocation(db.from("royalties").select("basis_amount_cents, royalty_amount_cents, status, locations(name), sales(sale_date)").eq("organization_id", profile.organizationId)),
+    supabase.from("patient_accounts").select("id, status").eq("organization_id", profile.organizationId),
+    supabase.from("patient_memberships").select("id, status").eq("organization_id", profile.organizationId),
+    supabase.from("payment_plans").select("id, status, total_amount_cents").eq("organization_id", profile.organizationId)
   ]);
 
   const locationMap = new Map<string, { name: string; gross: number; collected: number; refunded: number; outstanding: number }>();
@@ -91,6 +94,12 @@ export default async function ReportsPage() {
           <div className="header-actions">
             <Link className="secondary-button" href="/api/exports/financial?type=sales">Export Sales</Link>
             <Link className="secondary-button" href="/api/exports/financial?type=payments">Export Payments</Link>
+            <Link className="secondary-button" href="/api/exports/marketing?type=campaigns">Export Marketing</Link>
+            <Link className="secondary-button" href="/api/exports/executive?type=scorecards">Export Executive</Link>
+            <Link className="secondary-button" href="/executive">Executive Command</Link>
+            <Link className="secondary-button" href="/marketing">Marketing Overview</Link>
+            <Link className="secondary-button" href="/reports/gross-profit">Gross Profit</Link>
+            <Link className="secondary-button" href="/reports/labor-cost">Labor Cost</Link>
             <Link className="secondary-button" href="/reports/package-utilization">Package Utilization</Link>
             <Link className="primary-button" href="/sales/commissions">Commission Report</Link>
           </div>
@@ -103,6 +112,12 @@ export default async function ReportsPage() {
         <StatCard detail="Payments received" label="Collected" value={formatMoney(summary.collectedCents)} />
         <StatCard detail="After refunds" label="Net Collected" value={formatMoney(summary.netCollectedCents)} />
         <StatCard detail="Balances still due" label="Outstanding" value={formatMoney(summary.outstandingCents)} />
+      </section>
+      <section className="metric-grid">
+        <StatCard detail="Patient portal activation" label="Portal Active" value={String(portalAccounts?.filter((account) => account.status === "active").length ?? 0)} />
+        <StatCard detail="Pending patient invitations" label="Pending Invites" value={String(portalAccounts?.filter((account) => account.status === "invited").length ?? 0)} />
+        <StatCard detail="Active or trial memberships" label="Memberships" value={String(memberships?.filter((membership) => ["active", "trial"].includes(membership.status)).length ?? 0)} />
+        <StatCard detail="Original payment-plan totals" label="Payment Plans" value={formatMoney(paymentPlans?.reduce((sum, plan) => sum + plan.total_amount_cents, 0) ?? 0)} />
       </section>
       <section className="dashboard-grid">
         <section className="panel">

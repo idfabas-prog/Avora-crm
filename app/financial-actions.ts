@@ -103,6 +103,7 @@ export async function createSale(formData: FormData) {
   }
 
   await audit("Sale Created", "sales", sale.id, { location_id: locationId });
+  await supabase.rpc("snapshot_sale_attribution_for_sale", { target_sale_id: sale.id, model: "primary_attribution" });
   await emitDomainEvent({
     organizationId: profile.organizationId,
     eventType: "sale.created",

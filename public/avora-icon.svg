@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Dev Dashboard">
+  <rect width="512" height="512" rx="96" fill="#0f172a"/>
+  <path d="M256 84 410 428h-72l-32-78H205l-31 78h-72L256 84Zm-28 210h56l-28-70-28 70Z" fill="#f8fafc"/>
+  <path d="M173 426 256 84l83 342h-55l-28-122-28 122h-55Z" fill="#38bdf8" opacity=".72"/>
+</svg>

@@ -1,8 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { recordInboundSms } from "@/lib/communications/conversation-service";
 import { validateTwilioRequest } from "@/lib/communications/twilio-client";
+import { checkRateLimit, defaultRateLimitRules } from "@/lib/security/rate-limit";
+import { rateLimited, requestIp } from "@/lib/security/request-guard";
 
 export async function POST(request: NextRequest) {
+  const limit = checkRateLimit(defaultRateLimitRules.webhook, requestIp(request));
+  if (!limit.allowed) return rateLimited(limit.resetAt);
+
   const formData = await request.formData();
   const params = Object.fromEntries(Array.from(formData.entries()).map(([key, value]) => [key, String(value)]));
   const valid = await validateTwilioRequest({

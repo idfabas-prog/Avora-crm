@@ -4,9 +4,21 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:staging": "node scripts/run-staging.mjs dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:domain": "node --test lib/**/*.test.mjs",
+    "test:phase20": "node --test lib/system/system.test.mjs",
+    "test:phase22": "node --test lib/system/phase22.test.mjs",
+    "security:static": "node scripts/security-static-check.mjs",
+    "migrations:lint": "node scripts/migration-lint.mjs",
+    "smoke:local": "node scripts/smoke-test.mjs",
+    "smoke:production": "node scripts/production-smoke-test.mjs",
+    "load:local": "node scripts/load-test.mjs",
+    "ghl:worker": "node scripts/ghl-sync-worker.mjs --confirm-read-only-import",
+    "ghl:continuous-worker": "node scripts/ghl-sync-worker.mjs --confirm-read-only-import --continuous",
+    "ghl:continuous-worker:staging": "node scripts/run-staging.mjs ghl:continuous-worker"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

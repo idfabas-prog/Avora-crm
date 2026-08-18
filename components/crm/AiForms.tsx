@@ -21,6 +21,7 @@ import {
 } from "@/lib/ai/display";
 import type { AiAnswer, AiMode, LeadScoreFactor } from "@/lib/ai/types";
 import { ActionForm } from "@/components/crm/ActionForm";
+import { AI_ASSISTANT_DISPLAY_NAME, AI_INSIGHT_LABEL, APP_DISPLAY_NAME } from "@/lib/config/branding";
 
 const promptGroups = [
   {
@@ -97,7 +98,7 @@ export function AskAvoraForm({ mode }: { mode: AiMode }) {
         ]);
         setQuestion("");
       } catch {
-        setError({ message: "Ask Avora couldn't complete this analysis.", question: trimmed });
+        setError({ message: `${AI_ASSISTANT_DISPLAY_NAME} couldn't complete this analysis.`, question: trimmed });
       } finally {
         setPendingQuestion(null);
       }
@@ -109,7 +110,7 @@ export function AskAvoraForm({ mode }: { mode: AiMode }) {
       <div className="ask-composer panel">
         <div className="ask-composer-header">
           <div>
-            <h2>What should Avora analyze?</h2>
+            <h2>What should {APP_DISPLAY_NAME} analyze?</h2>
             <p>Ask about revenue, leads, appointments, sales, follow-up, or performance.</p>
           </div>
           <AiModeBadge mode={mode} />
@@ -122,7 +123,7 @@ export function AskAvoraForm({ mode }: { mode: AiMode }) {
           }}
         >
           <textarea
-            aria-label="Ask Avora question"
+            aria-label={`${AI_ASSISTANT_DISPLAY_NAME} question`}
             name="question"
             onChange={(event) => setQuestion(event.target.value)}
             onKeyDown={(event) => {
@@ -131,14 +132,14 @@ export function AskAvoraForm({ mode }: { mode: AiMode }) {
                 askQuestion();
               }
             }}
-            placeholder="Ask Avora about revenue, leads, appointments, sales, or follow-up..."
+            placeholder={`${AI_ASSISTANT_DISPLAY_NAME} about revenue, leads, appointments, sales, or follow-up...`}
             rows={4}
             value={question}
           />
           <div className="ask-composer-actions">
             <span>Enter to ask. Shift+Enter for a new line.</span>
             <button className="primary-button" disabled={pending || !question.trim()} type="submit">
-              {pending ? "Reviewing..." : "Ask Avora"}
+              {pending ? "Reviewing..." : AI_ASSISTANT_DISPLAY_NAME}
             </button>
           </div>
         </form>
@@ -153,7 +154,7 @@ export function AskAvoraForm({ mode }: { mode: AiMode }) {
       {error ? <AiErrorState error={error.message} onEdit={() => setQuestion(error.question)} onRetry={() => askQuestion(error.question)} /> : null}
 
       {session.length ? (
-        <section className="ai-session-thread" aria-label="Ask Avora session">
+        <section className="ai-session-thread" aria-label={`${AI_ASSISTANT_DISPLAY_NAME} session`}>
           <div className="ai-session-toolbar">
             <strong>Current Analysis</strong>
             <button className="secondary-button" onClick={() => setSession([])} type="button">Clear Conversation</button>
@@ -171,7 +172,7 @@ export function AskAvoraForm({ mode }: { mode: AiMode }) {
       ) : (
         <section className="ai-empty-state">
           <strong>Ready when you are.</strong>
-          <p>Try a suggested question or ask Avora what changed in the business today.</p>
+          <p>Try a suggested question or ask what changed in the business today.</p>
         </section>
       )}
     </section>
@@ -206,7 +207,7 @@ export function AiAnswerCard({ answer, askedAt, onFollowUp }: { answer: AiAnswer
     <section className="ai-answer-card">
       <div className="ai-answer-header">
         <div>
-          <span>Avora Insight</span>
+          <span>{AI_INSIGHT_LABEL}</span>
           <h2>{humanFeatureLabel(answer.feature)}</h2>
           <p>{formatDateTime(askedAt)} · {describeLocationScope(answer.basedOn)}{answer.basedOn.dateRange ? ` · ${answer.basedOn.dateRange.label}` : ""}</p>
         </div>
@@ -269,7 +270,7 @@ function AiLoadingState({ question }: { question: string | null }) {
     <section aria-live="polite" className="ai-loading-card">
       <span />
       <div>
-        <strong>Reviewing Avora data...</strong>
+        <strong>Reviewing {APP_DISPLAY_NAME} data...</strong>
         <p>{question ? `Analyzing: ${question}` : "Comparing performance and CRM metrics."}</p>
       </div>
     </section>

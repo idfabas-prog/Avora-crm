@@ -8,6 +8,8 @@ export const categoryLabels: Record<string, string> = {
   reactivation: "Reactivation",
   payment: "Payment",
   internal_operations: "Internal Operations",
+  inventory: "Inventory",
+  expansion: "Expansion",
   custom: "Custom"
 };
 
@@ -48,6 +50,13 @@ export const actionLabels: Record<string, string> = {
   create_task_to_schedule_appointment: "Create Task to Schedule Appointment",
   update_appointment_status: "Update Appointment Status",
   create_task: "Create Task",
+  create_checklist_item: "Create Checklist Item",
+  send_portal_notification: "Send Portal Notification",
+  create_internal_notification: "Create Internal Notification",
+  create_review_request: "Create Review Request",
+  enroll_in_campaign: "Enroll in Campaign",
+  add_to_suppression_list: "Add to Suppression List",
+  remove_from_suppression_list: "Remove from Suppression List",
   assign_task: "Assign Task",
   complete_task: "Complete Task",
   assign_conversation: "Assign Conversation",
@@ -66,9 +75,12 @@ export const operatorLabels = Object.fromEntries(conditionOperators.map((operato
 export const libraryGroups = [
   { label: "Triggers", items: triggerTypes.map((type) => ({ type: "trigger", key: type, label: triggerLabels[type] })) },
   { label: "Communication", items: ["send_sms", "use_sms_template", "add_internal_note", "send_internal_notification"].map((key) => ({ type: "action", key, label: actionLabels[key] })) },
+  { label: "Campaigns", items: ["enroll_in_campaign", "add_to_suppression_list", "remove_from_suppression_list"].map((key) => ({ type: "action", key, label: actionLabels[key] })) },
+  { label: "Reputation", items: ["create_review_request", "create_task", "send_portal_notification", "create_internal_notification"].map((key) => ({ type: "action", key, label: actionLabels[key] })) },
   { label: "CRM", items: ["update_contact_status", "add_tag", "remove_tag", "assign_contact", "create_opportunity", "update_opportunity_stage", "assign_opportunity"].map((key) => ({ type: "action", key, label: actionLabels[key] })) },
   { label: "Appointments", items: ["create_task_to_schedule_appointment", "update_appointment_status"].map((key) => ({ type: "action", key, label: actionLabels[key] })) },
   { label: "Sales", items: ["create_internal_task_after_payment", "mark_opportunity_sold_after_payment"].map((key) => ({ type: "action", key, label: actionLabels[key] })) },
+  { label: "Expansion", items: ["create_task", "assign_task", "send_internal_notification", "create_checklist_item"].map((key) => ({ type: "action", key, label: actionLabels[key] })) },
   { label: "Tasks", items: ["create_task", "assign_task", "complete_task"].map((key) => ({ type: "action", key, label: actionLabels[key] })) },
   { label: "Logic", items: workflowNodeTypes.filter((type) => ["condition", "branch", "goal", "stop"].includes(type)).map((type) => ({ type, key: type, label: nodeLabels[type] })) },
   { label: "Timing", items: [{ type: "wait", key: "relative", label: "Wait" }, { type: "wait", key: "appointment_relative", label: "Wait Until Appointment Time" }, { type: "wait", key: "wait_for_condition", label: "Wait for Condition" }] },

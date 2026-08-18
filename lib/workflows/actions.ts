@@ -50,6 +50,27 @@ export function previewAction(node: WorkflowNode) {
   if (actionType === "create_task" || actionType === "create_task_to_schedule_appointment") {
     return `Create task: '${String(node.configuration.title ?? "Untitled task")}'.`;
   }
+  if (actionType === "create_checklist_item") {
+    return `Create expansion checklist item: '${String(node.configuration.title ?? "Untitled item")}'.`;
+  }
+  if (actionType === "create_review_request") {
+    return "Create an ethical review request after eligibility checks.";
+  }
+  if (actionType === "enroll_in_campaign") {
+    return `Enroll contact in campaign '${String(node.configuration.campaign_id ?? "configured campaign")}'.`;
+  }
+  if (actionType === "add_to_suppression_list") {
+    return `Add contact to suppression list '${String(node.configuration.suppression_list_id ?? "configured list")}'.`;
+  }
+  if (actionType === "remove_from_suppression_list") {
+    return `Remove contact from suppression list '${String(node.configuration.suppression_list_id ?? "configured list")}'.`;
+  }
+  if (actionType === "send_portal_notification") {
+    return `Send portal notification: '${String(node.configuration.title ?? "Notification")}'.`;
+  }
+  if (actionType === "create_internal_notification") {
+    return `Create internal notification: '${String(node.configuration.title ?? "Notification")}'.`;
+  }
   if (actionType === "update_opportunity_stage" || actionType === "mark_opportunity_sold_after_payment") {
     return `Update opportunity stage to '${String(node.configuration.target_stage ?? "configured stage")}'.`;
   }

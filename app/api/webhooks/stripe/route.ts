@@ -1,6 +1,8 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkRateLimit, defaultRateLimitRules } from "@/lib/security/rate-limit";
+import { rateLimited, requestIp } from "@/lib/security/request-guard";
 
 function verifyStripeSignature(payload: string, signature: string | null) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -27,6 +29,9 @@ function verifyStripeSignature(payload: string, signature: string | null) {
 }
 
 export async function POST(request: NextRequest) {
+  const limit = checkRateLimit(defaultRateLimitRules.webhook, requestIp(request));
+  if (!limit.allowed) return rateLimited(limit.resetAt);
+
   const payload = await request.text();
   const signature = request.headers.get("stripe-signature");
 

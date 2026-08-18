@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { SearchInput } from "@/components/ui/SearchInput";
 import type { CurrentProfile } from "@/lib/auth/profile";
+import { APP_DISPLAY_NAME } from "@/lib/config/branding";
 
 export function TopHeader({ profile }: { profile: CurrentProfile }) {
   return (
@@ -7,14 +9,14 @@ export function TopHeader({ profile }: { profile: CurrentProfile }) {
       <div>
         <p>Good morning</p>
         <strong>
-          {profile.organization} workspace · {profile.title ?? profile.email}
+          {APP_DISPLAY_NAME} workspace - {profile.title ?? profile.email}
         </strong>
       </div>
       <div className="top-header-actions">
         <SearchInput placeholder="Search contacts, opportunities, payments" />
-        <button aria-label="Notifications" className="icon-button" type="button">
-          <span aria-hidden="true">•</span>
-        </button>
+        <Link aria-label="Notifications" className="icon-button" href="/notifications">
+          <span aria-hidden="true">*</span>
+        </Link>
       </div>
     </header>
   );

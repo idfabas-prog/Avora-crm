@@ -1,10 +1,13 @@
 import { notFound } from "next/navigation";
 import { ClinicalDocumentMetadataForm, ClinicalNoteActions, ClinicalNoteForm, ClinicalPhotoMetadataForm, ConsentSignForm, FollowupCompleteForm, TreatmentSessionStatusForms } from "@/components/crm/ClinicalForms";
+import { TreatmentInventoryUsageForm } from "@/components/crm/InventoryForms";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { requireCurrentProfile } from "@/lib/auth/profile";
 import { clinicalLocationAllowed, hasClinicalPermission } from "@/lib/clinical/permissions";
 import { formatDate, formatDateTime, fromDbStatus } from "@/lib/crm/constants";
+import { formatMoney } from "@/lib/financial/money";
+import { hasInventoryPermission } from "@/lib/inventory/permissions";
 import { createClient } from "@/lib/supabase/server";
 
 function relation<T>(value: T | T[] | null | undefined) {
@@ -33,7 +36,9 @@ export default async function ClinicalSessionPage({ params }: { params: Promise<
     { data: photos },
     { data: documents },
     { data: followups },
-    { data: services }
+    { data: services },
+    { data: inventoryLots },
+    { data: inventoryUsage }
   ] = await Promise.all([
     supabase.from("clinical_notes").select("id, note_type, body, locked_at, signed_at, created_at, author:user_profiles!clinical_notes_author_user_id_fkey(full_name)").eq("treatment_session_id", id).eq("organization_id", profile.organizationId).order("created_at", { ascending: false }),
     supabase.from("clinical_note_addenda").select("id, clinical_note_id, addendum_text, created_at, author:user_profiles!clinical_note_addenda_author_user_id_fkey(full_name)").eq("organization_id", profile.organizationId).order("created_at", { ascending: false }),
@@ -41,7 +46,13 @@ export default async function ClinicalSessionPage({ params }: { params: Promise<
     supabase.from("clinical_photos").select("id, photo_type, body_area, capture_date, storage_path, notes").eq("treatment_session_id", id).eq("organization_id", profile.organizationId).order("capture_date", { ascending: false }),
     supabase.from("clinical_documents").select("id, document_type, filename, storage_path, uploaded_at, description, status").eq("treatment_session_id", id).eq("organization_id", profile.organizationId).order("uploaded_at", { ascending: false }),
     supabase.from("treatment_followups").select("id, status, due_at, followup_type, notes, completed_at").eq("treatment_session_id", id).eq("organization_id", profile.organizationId).order("due_at", { ascending: true }),
-    supabase.from("services").select("id, name").eq("organization_id", profile.organizationId).eq("active", true).order("name")
+    supabase.from("services").select("id, name").eq("organization_id", profile.organizationId).eq("active", true).order("name"),
+    hasInventoryPermission(profile, "inventory.read")
+      ? supabase.from("inventory_lots").select("id, lot_number, expiration_date, quantity_available, cost_per_unit_cents, inventory_items(name, unit_of_measure), locations(name)").eq("organization_id", profile.organizationId).eq("location_id", session.location_id).eq("status", "active").gt("quantity_available", 0).order("expiration_date", { ascending: true })
+      : Promise.resolve({ data: [] }),
+    hasInventoryPermission(profile, "inventory.read")
+      ? supabase.from("treatment_inventory_usage").select("id, quantity_used, unit_cost_cents, total_cost_cents, created_at, inventory_items(name, unit_of_measure), inventory_lots(lot_number), recorder:user_profiles!treatment_inventory_usage_recorded_by_fkey(full_name)").eq("treatment_session_id", id).eq("organization_id", profile.organizationId).order("created_at", { ascending: false })
+      : Promise.resolve({ data: [] })
   ]);
 
   const contact = relation(session.contacts);
@@ -51,6 +62,12 @@ export default async function ClinicalSessionPage({ params }: { params: Promise<
   const entitlement = relation(session.package_entitlements);
   const plan = relation(session.treatment_plans);
   const serviceOptions = (services ?? []).map((item) => ({ id: item.id, name: item.name }));
+  const inventoryLotOptions = (inventoryLots ?? []).map((lot) => {
+    const lotItem = relation(lot.inventory_items);
+    const lotLocation = relation(lot.locations);
+    return { id: lot.id, name: `${lotItem?.name ?? "Item"} ${lot.lot_number ? `#${lot.lot_number}` : ""} - ${lotLocation?.name ?? "Location"} (${lot.quantity_available} ${lotItem?.unit_of_measure ?? "unit"})` };
+  });
+  const directTreatmentCostCents = (inventoryUsage ?? []).reduce((sum, item) => sum + Number(item.total_cost_cents ?? 0), 0);
 
   return (
     <div className="page-stack">
@@ -95,6 +112,20 @@ export default async function ClinicalSessionPage({ params }: { params: Promise<
             </dl>
           ) : <p className="quiet-text">No package entitlement linked to this session.</p>}
         </section>
+        {hasInventoryPermission(profile, "inventory.read") ? (
+          <section className="panel">
+            <div className="panel-header"><h2>Inventory Used</h2><span>Internal direct treatment cost {formatMoney(directTreatmentCostCents)}</span></div>
+            {hasInventoryPermission(profile, "inventory.write") ? <TreatmentInventoryUsageForm lots={inventoryLotOptions} sessionId={session.id} /> : null}
+            <div className="record-list">
+              {(inventoryUsage ?? []).map((usage) => {
+                const item = relation(usage.inventory_items);
+                const lot = relation(usage.inventory_lots);
+                const recorder = relation(usage.recorder);
+                return <article key={usage.id}><strong>{item?.name ?? "Item"} - {formatMoney(usage.total_cost_cents)}</strong><p>{usage.quantity_used} {item?.unit_of_measure ?? "unit"} from lot {lot?.lot_number ?? "No lot"}</p><span>{formatMoney(usage.unit_cost_cents)} each - recorded by {recorder?.full_name ?? "Unknown"} on {formatDateTime(usage.created_at)}</span></article>;
+              })}
+            </div>
+          </section>
+        ) : null}
         <section className="panel">
           <div className="panel-header"><h2>Clinical Notes</h2><span>Signed notes lock and require addenda</span></div>
           {hasClinicalPermission(profile, "clinical.notes.write") ? <ClinicalNoteForm contactId={session.contact_id} locationId={session.location_id} sessionId={session.id} planId={session.treatment_plan_id} /> : null}

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { ServiceWorkerRegistration } from "@/components/mobile/ServiceWorkerRegistration";
+import { APP_DESCRIPTION, APP_DISPLAY_NAME } from "@/lib/config/branding";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Avora CRM",
-  description: "Modern medspa CRM foundation"
+  title: APP_DISPLAY_NAME,
+  description: APP_DESCRIPTION
 };
 
 export default function RootLayout({
@@ -13,7 +15,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <ServiceWorkerRegistration />
+      </body>
     </html>
   );
 }
