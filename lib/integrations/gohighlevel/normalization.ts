@@ -98,13 +98,14 @@ export function normalizeAppointment(appointment: GhlAppointment) {
 
 export function normalizeMessage(message: GhlMessage) {
   const channel = String(message.channel ?? "sms").toLowerCase();
+  const messageTimestamp = message.timestamp ?? message.dateAdded ?? message.createdAt;
   return {
     direction: message.direction === "inbound" ? "inbound" : "outbound",
     channel: ["sms", "email", "whatsapp", "call"].includes(channel) ? channel : "external",
     body: message.body ?? "",
     status: message.status ?? "imported",
     provider_message_id: message.id,
-    created_at: message.timestamp ? new Date(message.timestamp).toISOString() : new Date().toISOString(),
+    created_at: messageTimestamp ? new Date(messageTimestamp).toISOString() : new Date().toISOString(),
     checksum: checksum(message)
   };
 }

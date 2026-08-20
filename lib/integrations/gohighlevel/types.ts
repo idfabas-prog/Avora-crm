@@ -87,6 +87,8 @@ export type GhlMessage = {
   body?: string | null;
   status?: string | null;
   timestamp?: string | null;
+  dateAdded?: string | null;
+  createdAt?: string | null;
 };
 
 export type GhlOpportunity = {
