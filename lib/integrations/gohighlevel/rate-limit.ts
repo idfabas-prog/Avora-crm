@@ -22,6 +22,14 @@ export function retryAfterFromHeaders(headers: Headers) {
   return Number.isFinite(seconds) ? seconds * 1000 : undefined;
 }
 
+type GhlResponseContext = {
+  endpoint?: string | null;
+  requestMethod?: string | null;
+  queryParameterNames?: string[];
+  requestBodyKeys?: string[];
+  apiVersion?: string | null;
+};
+
 function safeProviderMessage(payload: unknown) {
   if (!payload || typeof payload !== "object") return null;
   const record = payload as Record<string, unknown>;
@@ -30,14 +38,28 @@ function safeProviderMessage(payload: unknown) {
   return [message, error].filter(Boolean).join(" - ").slice(0, 260) || null;
 }
 
-export async function assertGhlResponse(response: Response, payload: unknown = null, endpoint: string | null = null) {
+function details(context: GhlResponseContext | string | null | undefined, response: Response, providerMessage: string | null) {
+  const normalized = typeof context === "string" ? { endpoint: context } : context ?? {};
+  return {
+    httpStatus: response.status,
+    safeProviderMessage: providerMessage,
+    endpoint: normalized.endpoint ?? null,
+    requestMethod: normalized.requestMethod ?? null,
+    queryParameterNames: normalized.queryParameterNames ?? [],
+    requestBodyKeys: normalized.requestBodyKeys ?? [],
+    apiVersion: normalized.apiVersion ?? null
+  };
+}
+
+export async function assertGhlResponse(response: Response, payload: unknown = null, context: GhlResponseContext | string | null = null) {
   if (response.ok) return;
   const providerMessage = safeProviderMessage(payload);
+  const errorDetails = details(context, response, providerMessage);
   if (response.status === 401 || response.status === 403) {
-    throw new GhlIntegrationError("GoHighLevel credentials or scopes are not authorized", "authorization_failed", false, { httpStatus: response.status, safeProviderMessage: providerMessage, endpoint });
+    throw new GhlIntegrationError("GoHighLevel credentials or scopes are not authorized", "authorization_failed", false, errorDetails);
   }
   if (shouldRetryStatus(response.status)) {
-    throw new GhlIntegrationError(`GoHighLevel transient response ${response.status}`, "transient_provider_error", true, { httpStatus: response.status, safeProviderMessage: providerMessage, endpoint });
+    throw new GhlIntegrationError(`GoHighLevel transient response ${response.status}`, "transient_provider_error", true, errorDetails);
   }
-  throw new GhlIntegrationError(`GoHighLevel request failed with status ${response.status}`, "provider_request_failed", false, { httpStatus: response.status, safeProviderMessage: providerMessage, endpoint });
+  throw new GhlIntegrationError(`GoHighLevel request failed with status ${response.status}`, "provider_request_failed", false, errorDetails);
 }

@@ -999,17 +999,11 @@ async function fetchImportPage(client: GhlReadOnlyClient, objectType: GhlImportO
         const contact = await client.getContact(job.cursor_value);
         return { data: contact ? [contact] : [], hasMore: false, recordsAvailable: contact ? 1 : 0, pagesFetched: 1 } as GhlPage<unknown>;
       }
-      return client.getContacts({
-        pageToken: job.page_token,
-        body: {
-          pageLimit: FULL_IMPORT_PAGE_SIZE,
-          ...(incrementalSince && !driftReconciliation ? { filters: [{ field: "updatedAt", operator: "gte", value: incrementalSince }] } : {})
-        }
-      });
+      return client.getContacts({ pageToken: job.page_token, body: { pageLimit: FULL_IMPORT_PAGE_SIZE } });
     case "pipeline":
       return client.getPipelines();
     case "opportunity":
-      return client.getOpportunities({ pageToken: job.page_token, query: incrementalSince && !driftReconciliation ? { updatedAfter: incrementalSince } : undefined });
+      return client.getOpportunities({ pageToken: job.page_token });
     case "calendar":
       return client.getCalendars();
     case "appointment":
@@ -1144,6 +1138,7 @@ async function queueOneObjectRun(
     cursorValue?: string | null;
     pageToken?: string | null;
     metadata?: Record<string, unknown>;
+    fanOut?: boolean;
   }
 ) {
   const { data: run, error } = await supabase.from("ghl_sync_runs").insert({
@@ -1164,15 +1159,21 @@ async function queueOneObjectRun(
   }).select("*").single();
   if (error) throw new Error(error.message);
   const syncRun = run as SyncRunRow;
-  await queueJob(supabase, syncRun, connection, input.objectType, {
-    cursorValue: input.cursorValue,
-    pageToken: input.pageToken,
-    metadata: {
-      phase: "21B",
-      incremental_target: input.syncType,
-      ...(input.metadata ?? {})
-    }
-  });
+  const jobMetadata = {
+    phase: "21B",
+    incremental_target: input.syncType,
+    ...(input.metadata ?? {})
+  };
+  if (input.fanOut) {
+    const queued = await queueFanOutJobs(supabase, syncRun, connection, input.objectType, jobMetadata);
+    if (queued === 0) await finalizeOneObjectRunIfDone(supabase, syncRun, connection.id);
+  } else {
+    await queueJob(supabase, syncRun, connection, input.objectType, {
+      cursorValue: input.cursorValue,
+      pageToken: input.pageToken,
+      metadata: jobMetadata
+    });
+  }
   await supabase.from("ghl_connections").update({ status: "syncing" }).eq("id", connection.id);
   return syncRun.id;
 }
@@ -1241,6 +1242,7 @@ async function queueIncrementalObjectRun(
     syncType: "incremental",
     objectType,
     pageToken,
+    fanOut: objectType === "appointment",
     metadata: {
       phase: "21C",
       reconciliation_schedule_minutes: input.everyMinutes,
@@ -1309,11 +1311,11 @@ export async function queueDueGhlIncrementalReconciliation(supabase: SupabaseCli
   return queued;
 }
 
-async function queueFanOutJobs(supabase: SupabaseClient, run: SyncRunRow, connection: GhlConnection, objectType: GhlImportObjectType) {
+async function queueFanOutJobs(supabase: SupabaseClient, run: SyncRunRow, connection: GhlConnection, objectType: GhlImportObjectType, metadata: Record<string, unknown> = {}) {
   if (objectType === "appointment") {
     const { data: calendars } = await supabase.from("external_record_mappings").select("external_id").eq("connection_id", connection.id).eq("external_object_type", "calendar").order("created_at");
     for (const calendar of calendars ?? []) {
-      await queueJob(supabase, run, connection, "appointment", { cursorValue: String(calendar.external_id), metadata: { calendar_external_id: calendar.external_id, calendar_batch_size: FULL_IMPORT_APPOINTMENT_CALENDAR_BATCH_SIZE } });
+      await queueJob(supabase, run, connection, "appointment", { cursorValue: String(calendar.external_id), metadata: { ...metadata, calendar_external_id: calendar.external_id, calendar_batch_size: FULL_IMPORT_APPOINTMENT_CALENDAR_BATCH_SIZE } });
     }
     if (!calendars?.length) await saveCursor(supabase, connection, "appointment", null, true);
     return calendars?.length ?? 0;
@@ -1321,12 +1323,12 @@ async function queueFanOutJobs(supabase: SupabaseClient, run: SyncRunRow, connec
   if (objectType === "message") {
     const { data: conversations } = await supabase.from("external_record_mappings").select("external_id, internal_id").eq("connection_id", connection.id).eq("external_object_type", "conversation").order("created_at");
     for (const conversation of conversations ?? []) {
-      await queueJob(supabase, run, connection, "message", { cursorValue: String(conversation.external_id), metadata: { conversation_external_id: conversation.external_id, internal_conversation_id: conversation.internal_id, conversation_batch_size: FULL_IMPORT_MESSAGE_CONVERSATION_BATCH_SIZE } });
+      await queueJob(supabase, run, connection, "message", { cursorValue: String(conversation.external_id), metadata: { ...metadata, conversation_external_id: conversation.external_id, internal_conversation_id: conversation.internal_id, conversation_batch_size: FULL_IMPORT_MESSAGE_CONVERSATION_BATCH_SIZE } });
     }
     if (!conversations?.length) await saveCursor(supabase, connection, "message", null, true);
     return conversations?.length ?? 0;
   }
-  await queueJob(supabase, run, connection, objectType);
+  await queueJob(supabase, run, connection, objectType, { metadata });
   return 1;
 }
 

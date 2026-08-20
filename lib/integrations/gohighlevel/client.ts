@@ -8,6 +8,29 @@ import type { GhlAppointment, GhlCalendar, GhlConnection, GhlContact, GhlConvers
 const baseUrl = "https://services.leadconnectorhq.com";
 export const GHL_READ_REQUEST_TIMEOUT_MS = 2 * 60 * 1000;
 const READ_ONLY_POST_ENDPOINTS = new Set(["/contacts/search"]);
+const CONTACT_SEARCH_BODY_KEYS = new Set(["locationId", "page", "pageLimit", "sort", "query"]);
+const OPPORTUNITY_SEARCH_QUERY_KEYS = new Set([
+  "q",
+  "status",
+  "campaignId",
+  "id",
+  "order",
+  "endDate",
+  "startAfter",
+  "startAfterId",
+  "date",
+  "country",
+  "page",
+  "limit",
+  "getTasks",
+  "getNotes",
+  "getCalendarEvents",
+  "locationId",
+  "pipelineId",
+  "pipelineStageId",
+  "contactId",
+  "assignedTo"
+]);
 
 export function assertGhlReadOnlyHttpRequest(method: string, path: string) {
   const normalizedMethod = method.toUpperCase();
@@ -36,7 +59,7 @@ export class GhlReadOnlyClient {
   }
 
   private safeEndpoint(url: URL) {
-    return `${url.pathname}${url.search}`;
+    return url.pathname;
   }
 
   private queryParameterNames(url: URL) {
@@ -52,14 +75,37 @@ export class GhlReadOnlyClient {
     }
   }
 
-  private numericOpportunityPage(pageToken: string | null | undefined) {
+  private numericPage(pageToken: string | number | null | undefined, endpoint: string, code: string) {
     const raw = String(pageToken ?? "").trim();
     if (!raw) return 1;
     const page = Number(raw);
     if (!Number.isInteger(page) || page < 1) {
-      throw new GhlIntegrationError("GoHighLevel opportunity pagination token must be a numeric page before requesting /opportunities/search.", "invalid_opportunity_page", false, { endpoint: "/opportunities/search", safeProviderMessage: "Opportunity search page must be numeric." });
+      throw new GhlIntegrationError(`GoHighLevel pagination token must be a positive numeric page before requesting ${endpoint}.`, code, false, { endpoint, safeProviderMessage: "Pagination page must be numeric." });
     }
     return page;
+  }
+
+  private numericOpportunityPage(pageToken: string | null | undefined) {
+    return this.numericPage(pageToken, "/opportunities/search", "invalid_opportunity_page");
+  }
+
+  private millisParam(value: string | number | boolean | null | undefined, fieldName: string) {
+    if (typeof value === "number" && Number.isFinite(value)) return Math.trunc(value);
+    const raw = String(value ?? "").trim();
+    if (/^\d+$/.test(raw)) return raw;
+    const parsed = new Date(raw).getTime();
+    if (Number.isFinite(parsed)) return parsed;
+    throw new GhlIntegrationError(`GoHighLevel appointment ${fieldName} must be a millisecond timestamp or parseable date.`, "invalid_appointment_window", false, { endpoint: "/calendars/events", safeProviderMessage: `${fieldName} must be milliseconds.` });
+  }
+
+  private requestContext(url: URL, method: "GET" | "POST", apiVersion: string, requestBodyKeys: string[] = []) {
+    return {
+      endpoint: this.safeEndpoint(url),
+      requestMethod: method,
+      queryParameterNames: this.queryParameterNames(url),
+      requestBodyKeys,
+      apiVersion
+    };
   }
 
   private requestTimeout() {
@@ -77,7 +123,7 @@ export class GhlReadOnlyClient {
       return await fetch(url, { ...init, signal: timeout.signal });
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
-        throw new GhlIntegrationError(`GoHighLevel read request timed out after ${GHL_READ_REQUEST_TIMEOUT_MS / 1000} seconds`, "request_timeout", true, { endpoint: this.safeEndpoint(url) });
+        throw new GhlIntegrationError(`GoHighLevel read request timed out after ${GHL_READ_REQUEST_TIMEOUT_MS / 1000} seconds`, "request_timeout", true, { endpoint: this.safeEndpoint(url), queryParameterNames: this.queryParameterNames(url) });
       }
       throw error;
     } finally {
@@ -98,19 +144,20 @@ export class GhlReadOnlyClient {
     }
     if (options.pageToken) url.searchParams.set(options.pageParam ?? "pageToken", options.pageToken);
 
+    const apiVersion = options.version ?? "v3";
     const response = await this.fetchWithTimeout(url, {
       method: "GET",
-      headers: privateIntegrationHeaders(token, options.version ?? "v3"),
+      headers: privateIntegrationHeaders(token, apiVersion),
       cache: "no-store"
     });
     const payload = this.parseJson(await response.text());
-    const endpoint = this.safeEndpoint(url);
-    await assertGhlResponse(response, payload, endpoint);
+    const context = this.requestContext(url, "GET", apiVersion);
+    await assertGhlResponse(response, payload, context);
     const page = parsePagedResponse<T>(payload, keys, {
       httpStatus: response.status,
-      endpoint,
+      endpoint: context.endpoint,
       queryParameterNames: this.queryParameterNames(url),
-      apiVersion: options.version ?? "v3",
+      apiVersion,
       requestMethod: "GET",
       limit: Number(options.query?.limit ?? options.query?.pageLimit) || undefined,
       offset: Number(options.pageToken ?? options.query?.offset) || undefined,
@@ -126,18 +173,22 @@ export class GhlReadOnlyClient {
 
     const url = new URL(path, baseUrl);
     assertGhlReadOnlyHttpRequest("POST", path);
-    const page = Number(options.pageToken ?? options.body?.page ?? 1);
+    const page = options.numericPageOnly
+      ? this.numericPage(options.pageToken ?? (options.body?.page as string | number | null | undefined) ?? 1, path, "invalid_provider_page")
+      : Number(options.pageToken ?? options.body?.page ?? 1);
     const body: Record<string, unknown> = { ...options.body, locationId: this.connection.ghl_location_id, page };
+    const apiVersion = options.version ?? "v3";
+    const requestBodyKeys = Object.keys(body).sort();
     const response = await this.fetchWithTimeout(url, {
       method: "POST",
-      headers: privateIntegrationHeaders(token, options.version ?? "v3", true),
+      headers: privateIntegrationHeaders(token, apiVersion, true),
       cache: "no-store",
       body: JSON.stringify(body)
     });
     const payload = this.parseJson(await response.text());
-    const endpoint = this.safeEndpoint(url);
-    await assertGhlResponse(response, payload, endpoint);
-    return parsePagedResponse<T>(payload, keys, { httpStatus: response.status, endpoint, queryParameterNames: this.queryParameterNames(url), apiVersion: options.version ?? "v3", requestMethod: "POST", page, limit: Number(body.pageLimit ?? body.limit) || undefined });
+    const context = this.requestContext(url, "POST", apiVersion, requestBodyKeys);
+    await assertGhlResponse(response, payload, context);
+    return parsePagedResponse<T>(payload, keys, { httpStatus: response.status, endpoint: context.endpoint, queryParameterNames: this.queryParameterNames(url), apiVersion, requestMethod: "POST", page, limit: Number(body.pageLimit ?? body.limit) || undefined, numericPageOnly: options.numericPageOnly });
   }
 
   private async readJson<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -151,13 +202,14 @@ export class GhlReadOnlyClient {
       if (value !== null && value !== undefined && value !== "") url.searchParams.set(key, String(value));
     }
 
+    const apiVersion = options.version ?? "v3";
     const response = await this.fetchWithTimeout(url, {
       method: "GET",
-      headers: privateIntegrationHeaders(token, options.version ?? "v3"),
+      headers: privateIntegrationHeaders(token, apiVersion),
       cache: "no-store"
     });
     const payload = this.parseJson(await response.text());
-    await assertGhlResponse(response, payload, this.safeEndpoint(url));
+    await assertGhlResponse(response, payload, this.requestContext(url, "GET", apiVersion));
     return payload as T;
   }
 
@@ -178,7 +230,10 @@ export class GhlReadOnlyClient {
   }
 
   getContacts(options?: RequestOptions) {
-    return this.postPaged<GhlContact>("/contacts/search", ["contacts"], { ...options, body: { pageLimit: 100, ...(options?.body ?? {}) } });
+    const requestedLimit = Number(options?.body?.pageLimit ?? options?.body?.limit ?? options?.query?.pageLimit ?? options?.query?.limit ?? 100);
+    const rawBody: Record<string, unknown> = { ...(options?.body ?? {}), pageLimit: Number.isFinite(requestedLimit) ? Math.min(100, Math.max(1, requestedLimit)) : 100 };
+    const body = Object.fromEntries(Object.entries(rawBody).filter(([key]) => CONTACT_SEARCH_BODY_KEYS.has(key)));
+    return this.postPaged<GhlContact>("/contacts/search", ["contacts"], { ...options, body, numericPageOnly: true });
   }
 
   async getContact(contactId: string) {
@@ -192,7 +247,21 @@ export class GhlReadOnlyClient {
   }
 
   getAppointments(options?: RequestOptions) {
-    return this.request<GhlAppointment>("/calendars/events", ["events", "appointments"], options);
+    const rawQuery = options?.query ?? {};
+    const calendarId = rawQuery.calendarId;
+    const userId = rawQuery.userId;
+    const groupId = rawQuery.groupId;
+    if (!calendarId && !userId && !groupId) {
+      throw new GhlIntegrationError("GoHighLevel calendar events require calendarId, userId, or groupId.", "invalid_appointment_request", false, { endpoint: "/calendars/events", safeProviderMessage: "calendarId, userId, or groupId is required." });
+    }
+    const query: Record<string, string | number | boolean | null | undefined> = {
+      calendarId,
+      userId,
+      groupId,
+      startTime: this.millisParam(rawQuery.startTime, "startTime"),
+      endTime: this.millisParam(rawQuery.endTime, "endTime")
+    };
+    return this.request<GhlAppointment>("/calendars/events", ["events", "appointments"], { ...options, pageToken: null, query });
   }
 
   getConversations(options?: RequestOptions) {
@@ -205,7 +274,8 @@ export class GhlReadOnlyClient {
 
   getOpportunities(options?: RequestOptions) {
     const page = this.numericOpportunityPage(options?.pageToken);
-    const query: Record<string, string | number | boolean | null | undefined> = { limit: 100, ...(options?.query ?? {}), page };
+    const requestedQuery = Object.entries(options?.query ?? {}).filter(([key]) => OPPORTUNITY_SEARCH_QUERY_KEYS.has(key));
+    const query: Record<string, string | number | boolean | null | undefined> = { limit: 100, ...Object.fromEntries(requestedQuery), page };
     return this.request<GhlOpportunity>("/opportunities/search", ["opportunities"], {
       ...options,
       pageToken: null,
