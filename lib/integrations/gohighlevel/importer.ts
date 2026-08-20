@@ -1963,35 +1963,56 @@ async function recoverStaleGhlLocks(supabase: SupabaseClient, workerId: string) 
 
 export async function getGhlWorkerQueueDiagnostics(supabase: SupabaseClient) {
   const now = new Date().toISOString();
-  const { data: jobs, error } = await supabase
+  const [
+    { data: jobs, error },
+    { count: dueQueuedCount, error: dueQueuedError },
+    { count: futureQueuedCount, error: futureQueuedError },
+    { count: activeCount, error: activeError },
+    { count: failedCount, error: failedError },
+    { count: deadLetterCount, error: deadLetterError },
+    { count: completedCount, error: completedError },
+    { data: directNextDue, error: directNextDueError },
+    { data: directNextFuture, error: directNextFutureError }
+  ] = await Promise.all([
+    supabase
     .from("ghl_sync_jobs")
     .select("id, sync_run_id, object_type, page_token, status, attempts, run_at, locked_at, locked_by, updated_at, metadata_safe")
     .in("status", ["queued", "locked", "running", "failed", "dead_letter", "completed"])
     .order("run_at", { ascending: true })
-    .limit(1000);
-  if (error) throw new Error(error.message);
+    .limit(1000),
+    supabase.from("ghl_sync_jobs").select("id", { count: "exact", head: true }).eq("status", "queued").lte("run_at", now),
+    supabase.from("ghl_sync_jobs").select("id", { count: "exact", head: true }).eq("status", "queued").gt("run_at", now),
+    supabase.from("ghl_sync_jobs").select("id", { count: "exact", head: true }).in("status", ["locked", "running"]),
+    supabase.from("ghl_sync_jobs").select("id", { count: "exact", head: true }).eq("status", "failed"),
+    supabase.from("ghl_sync_jobs").select("id", { count: "exact", head: true }).eq("status", "dead_letter"),
+    supabase.from("ghl_sync_jobs").select("id", { count: "exact", head: true }).eq("status", "completed"),
+    supabase.from("ghl_sync_jobs").select("id, sync_run_id, object_type, page_token, status, attempts, run_at, locked_at, locked_by").eq("status", "queued").lte("run_at", now).order("run_at").limit(1).maybeSingle(),
+    supabase.from("ghl_sync_jobs").select("id, sync_run_id, object_type, page_token, status, attempts, run_at, locked_at, locked_by").eq("status", "queued").gt("run_at", now).order("run_at").limit(1).maybeSingle()
+  ]);
+  const firstError = error ?? dueQueuedError ?? futureQueuedError ?? activeError ?? failedError ?? deadLetterError ?? completedError ?? directNextDueError ?? directNextFutureError;
+  if (firstError) throw new Error(firstError.message);
   const rows = jobs ?? [];
-  const dueQueued = rows.filter((job) => job.status === "queued" && String(job.run_at) <= now);
-  const futureQueued = rows.filter((job) => job.status === "queued" && String(job.run_at) > now);
   const active = rows.filter((job) => job.status === "locked" || job.status === "running");
   const staleCutoff = staleLockCutoffIso();
   const stale = active.filter((job) => {
     const heartbeatAt = jobHeartbeatAt(job);
     return heartbeatAt ? heartbeatAt < staleCutoff : false;
   });
-  const counts = rows.reduce<Record<string, number>>((memo, job) => {
-    const status = String(job.status ?? "unknown");
-    memo[status] = (memo[status] ?? 0) + 1;
-    return memo;
-  }, {});
-  const nextDue = dueQueued[0] ?? null;
-  const nextFuture = futureQueued[0] ?? null;
+  const counts: Record<string, number> = {
+    queued: Number(dueQueuedCount ?? 0) + Number(futureQueuedCount ?? 0),
+    active: Number(activeCount ?? 0),
+    failed: Number(failedCount ?? 0),
+    dead_letter: Number(deadLetterCount ?? 0),
+    completed: Number(completedCount ?? 0)
+  };
+  const nextDue = directNextDue ?? null;
+  const nextFuture = directNextFuture ?? null;
   return {
     now,
     counts,
-    dueQueued: dueQueued.length,
-    futureQueued: futureQueued.length,
-    active: active.length,
+    dueQueued: Number(dueQueuedCount ?? 0),
+    futureQueued: Number(futureQueuedCount ?? 0),
+    active: Number(activeCount ?? 0),
     staleLocks: stale.length,
     nextDueJob: nextDue ? {
       id: String(nextDue.id),
@@ -2028,25 +2049,31 @@ export async function getGhlWorkerQueueDiagnostics(supabase: SupabaseClient) {
   };
 }
 
-async function claimNextJob(supabase: SupabaseClient, workerId: string, diagnostics: string[]) {
+export async function claimNextJob(supabase: SupabaseClient, workerId: string, diagnostics: string[]) {
   await recoverStaleGhlLocks(supabase, workerId);
-  const snapshot = await getGhlWorkerQueueDiagnostics(supabase);
-  diagnostics.push(`jobs_found due=${snapshot.dueQueued} future=${snapshot.futureQueued} active=${snapshot.active} stale=${snapshot.staleLocks}`);
-  if (snapshot.dueQueued === 0) {
-    diagnostics.push(snapshot.nextFutureJob ? `no_jobs_due next_run_at=${snapshot.nextFutureJob.runAt}` : "no_jobs_due");
-    console.log(JSON.stringify({ event: "ghl_worker_no_jobs_due", dueQueued: snapshot.dueQueued, futureQueued: snapshot.futureQueued, active: snapshot.active, staleLocks: snapshot.staleLocks, nextRunAt: snapshot.nextFutureJob?.runAt ?? null }));
-    return null;
-  }
-  const { data: job } = await supabase
+  const now = new Date().toISOString();
+  const { data: job, error: jobError } = await supabase
     .from("ghl_sync_jobs")
     .select("*")
     .eq("status", "queued")
-    .lte("run_at", new Date().toISOString())
-    .order("run_at")
+    .lte("run_at", now)
+    .order("run_at", { ascending: true })
     .limit(1)
     .maybeSingle();
-  if (!job) return null;
-  const { data: claimed } = await supabase
+  if (jobError) throw new Error(jobError.message);
+  let snapshot: Awaited<ReturnType<typeof getGhlWorkerQueueDiagnostics>> | null = null;
+  try {
+    snapshot = await getGhlWorkerQueueDiagnostics(supabase);
+    diagnostics.push(`jobs_found due=${snapshot.dueQueued} future=${snapshot.futureQueued} active=${snapshot.active} stale=${snapshot.staleLocks}`);
+  } catch (error) {
+    diagnostics.push(`queue_diagnostics_unavailable ${boundedError(error)}`);
+  }
+  if (!job) {
+    diagnostics.push(snapshot?.nextFutureJob ? `no_jobs_due next_run_at=${snapshot.nextFutureJob.runAt}` : "no_jobs_due");
+    console.log(JSON.stringify({ event: "ghl_worker_no_jobs_due", dueQueued: snapshot?.dueQueued ?? null, futureQueued: snapshot?.futureQueued ?? null, active: snapshot?.active ?? null, staleLocks: snapshot?.staleLocks ?? null, nextRunAt: snapshot?.nextFutureJob?.runAt ?? null }));
+    return null;
+  }
+  const { data: claimed, error: claimError } = await supabase
     .from("ghl_sync_jobs")
     .update({
       status: "running",
@@ -2058,6 +2085,7 @@ async function claimNextJob(supabase: SupabaseClient, workerId: string, diagnost
     .eq("status", "queued")
     .select("*")
     .maybeSingle();
+  if (claimError) throw new Error(claimError.message);
   if (claimed?.id) {
     diagnostics.push(`job_claimed id=${claimed.id} object=${claimed.object_type} page=${claimed.page_token ?? "first"}`);
     console.log(JSON.stringify({ event: "ghl_worker_job_claimed", jobId: claimed.id, objectType: claimed.object_type, pageToken: claimed.page_token ?? null, workerId }));
