@@ -905,7 +905,22 @@ async function processMessage(supabase: SupabaseClient, run: SyncRunRow, connect
     if (error) throw new Error(error.message);
     messageId = String(data.id);
   }
-  await upsertMapping(supabase, run, connection, { objectType: "message", externalId: id, internalObjectType: "messages", internalId: messageId, checksum: normalized.checksum, metadata: { conversation_external_id: message.conversationId || conversationExternalId } });
+  await upsertMapping(supabase, run, connection, {
+    objectType: "message",
+    externalId: id,
+    internalObjectType: "messages",
+    internalId: messageId,
+    externalUpdatedAt: normalized.created_at,
+    checksum: normalized.checksum,
+    metadata: { conversation_external_id: message.conversationId || conversationExternalId, message_timestamp: normalized.created_at }
+  });
+  const { error: conversationUpdateError } = await supabase
+    .from("conversations")
+    .update({ last_message_at: normalized.created_at })
+    .eq("id", conversationMapping.internal_id)
+    .eq("organization_id", run.organization_id)
+    .or(`last_message_at.is.null,last_message_at.lt.${normalized.created_at}`);
+  if (conversationUpdateError) throw new Error(conversationUpdateError.message);
   return existing ? "updated" : "created";
 }
 
@@ -1011,7 +1026,12 @@ async function fetchImportPage(client: GhlReadOnlyClient, objectType: GhlImportO
     case "conversation":
       return client.getConversations({ pageToken: job.page_token, query: { limit: FULL_IMPORT_PAGE_SIZE, ...(incrementalSince && !driftReconciliation ? { updatedAfter: incrementalSince } : {}) } });
     case "message":
-      if (!job.cursor_value) return { data: [], hasMore: false } as GhlPage<unknown>;
+      if (!job.cursor_value) {
+        throw new GhlIntegrationError("GHL message sync job is missing the external conversation cursor.", "missing_message_conversation_cursor", false, {
+          endpoint: "/conversations/{conversationId}/messages",
+          safeProviderMessage: "Message sync requires a mapped GHL conversation ID."
+        });
+      }
       return client.getMessages(job.cursor_value, { pageToken: job.page_token, query: { limit: FULL_IMPORT_PAGE_SIZE } });
     case "transaction":
       return client.getPayments({ pageToken: job.page_token });
@@ -1242,7 +1262,7 @@ async function queueIncrementalObjectRun(
     syncType: "incremental",
     objectType,
     pageToken,
-    fanOut: objectType === "appointment",
+    fanOut: objectType === "appointment" || objectType === "message",
     metadata: {
       phase: "21C",
       reconciliation_schedule_minutes: input.everyMinutes,
